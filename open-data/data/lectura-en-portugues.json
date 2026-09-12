@@ -1,0 +1,17 @@
+{
+  "tema": "lectura-en-portugues",
+  "portal": "aprende-brasil",
+  "registros": [
+    {
+      "fuente": "Project Gutenberg",
+      "spec": "gutenberg:55752",
+      "ok": true,
+      "datos": {
+        "id": 55752,
+        "titulo": "The Project Gutenberg eBook of Dom Casmurro",
+        "caracteres": 410037,
+        "url": "https://www.gutenberg.org/ebooks/55752"
+      }
+    }
+  ]
+}

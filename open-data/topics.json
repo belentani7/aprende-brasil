@@ -1,0 +1,55 @@
+{
+  "portal": "aprende-brasil",
+  "repo": "belentani7/aprende-brasil",
+  "dominio": "Educacao PT-BR e cidadania",
+  "generado_utc": "2026-09-12T21:24:00+00:00",
+  "orden_idiomas": [
+    "pt",
+    "es",
+    "en",
+    "ca"
+  ],
+  "fuentes": [
+    {
+      "tema": "vocabulario-pt",
+      "fuente": "Wiktionary ES",
+      "spec": "wikt_es:escola",
+      "ok": true
+    },
+    {
+      "tema": "vocabulario-pt",
+      "fuente": "Tatoeba EN",
+      "spec": "tatoeba:eng:escola",
+      "ok": true
+    },
+    {
+      "tema": "territorio-e-cidadania",
+      "fuente": "IBGE",
+      "spec": "ibge_estados",
+      "ok": true
+    },
+    {
+      "tema": "lectura-en-portugues",
+      "fuente": "Project Gutenberg",
+      "spec": "gutenberg:55752",
+      "ok": true
+    }
+  ],
+  "temas": [
+    {
+      "tema": "vocabulario-pt",
+      "fuentes_ok": 2,
+      "fuentes_total": 2
+    },
+    {
+      "tema": "territorio-e-cidadania",
+      "fuentes_ok": 1,
+      "fuentes_total": 1
+    },
+    {
+      "tema": "lectura-en-portugues",
+      "fuentes_ok": 1,
+      "fuentes_total": 1
+    }
+  ]
+}
