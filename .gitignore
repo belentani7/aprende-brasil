@@ -122,3 +122,8 @@ __pycache__/
 
 # Ship the seeded SQLite DB for zero-config runs (regenerable with `pnpm seed`)
 !data/aprende.db
+
+.vercel
+
+# Local Netlify folder
+.netlify

@@ -26,16 +26,18 @@ e a plataforma roda **standalone**: frontend React + API FastAPI + SQLite.
 | Camada | Tecnologia |
 | --- | --- |
 | Experiência | React 19 + Vite + TailwindCSS 4 + shadcn/ui + wouter |
-| API | FastAPI + SQLAlchemy (Python 3.11+) |
-| Dados | SQLite (`data/aprende.db`) |
-| Conteúdo | Scripts Python + banco de palavras aberto |
+| Dados no cliente | `client/src/data/curriculum.json` (205 módulos) + `localStorage` |
+| Conteúdo | Scripts Python: banco de palavras aberto + conteúdo curado |
+| API (opcional) | FastAPI + SQLAlchemy (Python 3.11+) — só dev/tutor com LLM |
+| Fonte | SQLite (`data/aprende.db`) |
 
 ```
-client/    frontend React
-api/       backend FastAPI (main, models, routes/)
-scripts/   fetch_open_data.py, build_curriculum.py
-data/      aprende.db + open/palavras-pt.txt
-dist/public  build do frontend (vite build)
+client/     frontend React (lib/api.ts, lib/tutor.ts, data/curriculum.json)
+api/        backend FastAPI (opcional — dev e tutor com LLM)
+scripts/    fetch_open_data.py, build_curriculum.py, export_curriculum.py, content_*.py
+data/       aprende.db + open/palavras-pt.txt
+functions/  Pages Function (fallback SPA da Cloudflare)
+dist/public build do frontend (vite build)
 ```
 
 ## Rodar
@@ -73,7 +75,21 @@ progresso (monotônico), estatísticas e favoritos — mais 6 checagens de dados
 (205 módulos, 1025 etapas, 5 etapas na ordem certa por módulo, `content_json`
 válido, ids únicos, nenhuma trilha órfã).
 
+## Ao vivo
+
+| Host | URL | Status |
+| --- | --- | --- |
+| Cloudflare Pages | https://aprende-brasil-5gq.pages.dev | ✅ |
+| Vercel | https://aprende-brasil-belentani7pedro-6758s-projects.vercel.app | ✅ |
+
+O site é **100% estático**: o currículo viaja como JSON (`client/src/data/curriculum.json`)
+e o progresso/favoritos ficam no `localStorage` do navegador. Não há backend em produção.
+
 ## API
+
+A plataforma **não precisa de servidor**: `client/src/lib/api.ts` lê o JSON local e o
+`localStorage`. O FastAPI (`api/`) segue disponível para uso local/dev e para servir o
+tutor com LLM — basta definir `VITE_API_URL` no build para o cliente preferir o backend.
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
@@ -87,6 +103,22 @@ válido, ids únicos, nenhuma trilha órfã).
 | `GET`/`POST` | `/api/favorites` | favoritos (toggle) |
 | `GET` | `/api/stats` | resumo do usuário |
 
+## Tutor Nilo (offline)
+
+Sem backend, o tutor responde com um motor local em `client/src/lib/tutor.ts`: ele
+detecta a intenção da pergunta, busca no currículo os módulos mais relevantes e compõe
+uma resposta ampla — conceito, exemplo concreto, prática, verificação e próximo passo —
+sempre citando conteúdo real dos 205 módulos.
+
+Para usar um LLM, defina as variáveis no backend e aponte o cliente para ele:
+
+```
+VITE_API_URL=https://seu-backend        # build do cliente
+LLM_API_URL=https://api.exemplo.com/v1/chat/completions
+LLM_API_KEY=...
+LLM_MODEL=gpt-4o-mini
+```
+
 ## Bancos de dados abertos
 
 - **Lista de palavras do português** — [pythonprobr/palavras](https://github.com/pythonprobr/palavras) (MIT),
@@ -96,28 +128,32 @@ válido, ids únicos, nenhuma trilha órfã).
 
 Os scripts usam **apenas a biblioteca padrão** para o download.
 
-## Tutor Nilo (LLM opcional)
-
-Sem configuração, o tutor responde com orientações locais (offline). Para usar um
-LLM, defina variáveis de ambiente (endpoint OpenAI-compatível):
-
-```
-LLM_API_URL=https://api.exemplo.com/v1/chat/completions
-LLM_API_KEY=...
-LLM_MODEL=gpt-4o-mini
-```
-
 ## Deploy
 
-- **Frontend** (`dist/public`): estático, vai para Vercel / Cloudflare Pages
-  (`vercel.json` já configurado com `vite build`).
-- **Backend** (FastAPI): precisa de host Python (Render, Fly.io, Railway ou VPS).
-  Um host estático não executa o backend — para produção completa, sirva o SPA
-  pelo próprio FastAPI (`pnpm start`) ou aponte `VITE_API_URL` para o backend.
+Tudo é estático, então qualquer CDN serve. O que cada host precisa:
+
+| Host | Comando | Fallback SPA |
+| --- | --- | --- |
+| Cloudflare Pages | `wrangler pages deploy dist/public --project-name aprende-brasil` | `functions/[[path]].js` |
+| Vercel | `vercel deploy --prod` | `rewrites` em `vercel.json` |
+| Netlify | `netlify deploy --prod --dir=dist/public` | `netlify.toml` |
+| GitHub Pages | publicar `dist/public` na branch `gh-pages` | `404.html` + `.nojekyll` |
+
+Notas de campo (custaram tempo, ficam registradas):
+
+- **Vercel**: `requirements.txt` na raiz faz a Vercel tentar compilar `pydantic-core`
+  e o build morre. Por isso existe `.vercelignore` — as regras são ancoradas em `/`
+  (`/data/`, não `data/`), senão `client/src/data/curriculum.json` também é excluído.
+- **Cloudflare Pages**: `_redirects` tem prioridade **sobre** os assets estáticos, e um
+  catch-all `/*` serve `/assets/*.js` como `text/html`. Por isso o fallback é uma
+  Pages Function, que só cai no `index.html` quando o asset realmente não existe.
+- **GitHub Pages**: serve em subpath, então o build precisa de `--base=/aprende-brasil/`.
+- **Deployment Protection** na Vercel bloqueia o site público (302 para SSO). Desative
+  com `ssoProtection: null` via API do projeto.
 
 ## Próximos passos
 
-- Mais temas de alfabetização (transporte, saúde, trabalho) e exercícios com correção.
+- Exercícios com correção automática (hoje o "check" é autoavaliação).
 - Importador de módulos versionado + revisão editorial.
 - Perfis de docente/editor, metas e agenda persistidas.
 - Voz (OpenVoice/TTS) atrás de um adaptador server-side.

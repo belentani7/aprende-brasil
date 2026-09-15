@@ -1,0 +1,11 @@
+[build]
+  command = "pnpm build"
+  publish = "dist/public"
+
+# Fallback SPA. Fica aqui (e não em client/public/_redirects) porque o
+# _redirects quebra a Cloudflare Pages: lá ele tem prioridade sobre os assets
+# estáticos e serve /assets/*.js como text/html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

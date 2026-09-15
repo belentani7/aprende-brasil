@@ -1,0 +1,15 @@
+# O deploy na Vercel é 100% estático (Vite). O backend Python não sobe para lá:
+# se requirements.txt for visto, a Vercel tenta compilar pydantic-core e falha.
+# Todas as regras são ancoradas na raiz (/) para não excluir client/src/data/.
+/api/
+/server/
+/scripts/
+/tests/
+/drizzle/
+/open-data/
+/shared/
+/data/
+/requirements.txt
+/requirements-dev.txt
+/pytest.ini
+**/__pycache__/
