@@ -1,0 +1,39 @@
+{
+  "tema": "vocabulario-pt",
+  "portal": "aprende-brasil",
+  "registros": [
+    {
+      "fuente": "Wiktionary ES",
+      "spec": "wikt_es:escola",
+      "ok": true,
+      "datos": [
+        {
+          "titulo": "escola",
+          "fragmento": "similares:  Escola Del latín schola escola ¦ plural: escoles 1 Educación Escuela Sinónimo: col·legi. Wikipedia en catalán tiene un artículo sobre escola. Si puedes"
+        },
+        {
+          "titulo": "Escola",
+          "fragmento": " Entradas similares:  escola Del vasco 1 Apellido."
+        },
+        {
+          "titulo": "escolá",
+          "fragmento": "escolá pronunciación (AFI) [eskoˈla] silabación es-co-lá acentuación aguda longitud silábica trisílaba rima a"
+        },
+        {
+          "titulo": "escolas",
+          "fragmento": "1 Forma del plural de escola."
+        },
+        {
+          "titulo": "escoles",
+          "fragmento": "1 Forma del plural de escola: &quot;escuelas&quot;."
+        }
+      ]
+    },
+    {
+      "fuente": "Tatoeba EN",
+      "spec": "tatoeba:eng:escola",
+      "ok": false,
+      "error": "HTTP Error 429: Too Many Requests"
+    }
+  ]
+}

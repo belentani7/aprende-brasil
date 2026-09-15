@@ -1,0 +1,48 @@
+{
+  "tema": "cultura-e-historia",
+  "portal": "aprende-brasil",
+  "registros": [
+    {
+      "fuente": "Wikipedia PT",
+      "spec": "wiki:pt:História do Brasil",
+      "ok": true,
+      "datos": {
+        "titulo": "História do Brasil",
+        "resumen": "História do Brasil começa com a chegada dos primeiros humanos na América do Sul há pelo menos 22 000 anos AP. Em fins do século XV, quando do Tratado de Tordesilhas, toda a área hoje conhecida como Brasil era habitada por comunidades seminômades que subsistiam da caça, pesca, coleta e agricultura. Em 22 de abril de 1500, Pedro Álvares Cabral, capitão-mor de expedição portuguesa a caminho das Índias, chegou, na hoje conhecida, Porto Seguro na Bahia, tornando a região colônia do Reino de Portugal.",
+        "url": "https://pt.wikipedia.org/wiki/Hist%C3%B3ria_do_Brasil"
+      }
+    },
+    {
+      "fuente": "Wikisource PT",
+      "spec": "mediawiki:pt.wikisource.org:historia",
+      "ok": true,
+      "datos": [
+        {
+          "titulo": "À Margem da História",
+          "url": "https://pt.wikisource.org/wiki/%C3%80_Margem_da_Hist%C3%B3ria",
+          "fragmento": "À Margem da História por Euclides da Cunha 121257À Margem da HistóriaEuclides da Cunha"
+        },
+        {
+          "titulo": "História do Brasil (Frei Vicente do Salvador)",
+          "url": "https://pt.wikisource.org/wiki/Hist%C3%B3ria_do_Brasil_%28Frei_Vicente_do_Salvador%29",
+          "fragmento": "História do Brasil por Frei Vicente do Salvador 104493História do BrasilFrei Vicente do Salvador Escrita na Bahia a 20 de dezembro de 1627. Dedicatória"
+        },
+        {
+          "titulo": "História do Futuro",
+          "url": "https://pt.wikisource.org/wiki/Hist%C3%B3ria_do_Futuro",
+          "fragmento": "História do Futuro por Padre Antônio Vieira 20880História do FuturoPadre Antônio Vieira Uma versão para impressão de História do Futuro está disponível"
+        },
+        {
+          "titulo": "Historia da origem e estabelecimento da Inquisição em Portugal",
+          "url": "https://pt.wikisource.org/wiki/Historia_da_origem_e_estabelecimento_da_Inquisi%C3%A7%C3%A3o_em_Portugal",
+          "fragmento": "Historia da origem e estabelecimento da Inquisição em Portugal por Alexandre Herculano, editado por David Lopes 204575Historia da origem e estabelecimento"
+        },
+        {
+          "titulo": "História Geral do Peru",
+          "url": "https://pt.wikisource.org/wiki/Hist%C3%B3ria_Geral_do_Peru",
+          "fragmento": "História Geral do Peru, ou Comentários Reais dos Incas por Inca Garcilaso de la Vega 193146História Geral do Peru, ou Comentários Reais dos IncasInca Garcilaso"
+        }
+      ]
+    }
+  ]
+}
