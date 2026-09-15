@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "uvicorn api.main:app --reload --port 8000",
-    "build": "vite build",
+    "build": "vite build && node scripts/postbuild.mjs",
     "start": "uvicorn api.main:app --host 0.0.0.0 --port 8000",
     "check": "tsc --noEmit",
     "test": "vitest run",

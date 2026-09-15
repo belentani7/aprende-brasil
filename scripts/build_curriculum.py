@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Gera o currículo da Aprende Brasil (200+ módulos) e popula o SQLite.
+"""Gera o currículo da Aprende Brasil (205 módulos) e popula o SQLite.
 
 - Alfabetização: usa o banco de palavras aberto (data/open/palavras-pt.txt).
-- Informática / Matemática / Idiomas: listas curadas com passos concretos.
+- Informática / Matemática / Idiomas: conteúdo pedagógico real, curado em
+  scripts/content_*.py (5 etapas por módulo, sem placeholders).
 
 Rodar: python -m scripts.build_curriculum
 """
@@ -17,6 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from api.database import Base, SessionLocal, engine  # noqa: E402
 from api.models import Module, ModuleStep, Track  # noqa: E402
+from scripts.content_idiomas import IDIOMAS  # noqa: E402
+from scripts.content_informatica import INFORMATICA  # noqa: E402
+from scripts.content_matematica import MATEMATICA  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 WORDS_FILE = ROOT / "data" / "open" / "palavras-pt.txt"
@@ -210,140 +214,11 @@ def seed_alfabetizacao(db):
 
 
 # ── Informática / Matemática / Idiomas ───────────────────────────────────
-def seed_topics(db, track, level, items):
-    n = 0
-    for i, (mid, title, sub) in enumerate(items):
-        add(db, mid, track, title, sub, level, i // 8, 12 + (i % 3) * 2, i % 7 == 0, steps(
-            ("explanation", "Entender", f"{title}: {sub}"),
-            ("example", "Ver um exemplo", f"Exemplo prático sobre {sub.lower()}."),
-            ("practice", "Praticar", f"Agora é sua vez: pratique {title.lower()} no seu dia a dia."),
-            ("check", "Verificar", "Você conseguiu? O que foi mais difícil?"),
-            ("next", "Próximo passo", "Ótimo! Continue praticando."),
-        ))
-        n += 1
-    return n
-
-
-INFO = [
-    ("info-ligar", "Ligar e desligar o computador", "Botão de energia e tela inicial."),
-    ("info-mouse", "Usar o mouse", "Clicar, arrastar e rolar."),
-    ("info-teclado", "Conhecer o teclado", "Letras, números, espaço, enter."),
-    ("info-celular", "Navegar no celular", "Tocar, deslizar, abrir apps."),
-    ("info-internet", "O que é a internet", "Como a rede conecta pessoas."),
-    ("info-busca", "Pesquisar na internet", "Encontrar o que você precisa."),
-    ("info-email", "Criar e usar um e-mail", "Escrever, enviar e receber."),
-    ("info-senha", "Criar uma senha segura", "Proteger suas contas."),
-    ("info-whatsapp", "Usar o WhatsApp", "Mensagens, fotos e áudios."),
-    ("info-fotos", "Organizar fotos", "Pastas e liberar espaço."),
-    ("info-pix", "Fazer e receber Pix", "Transferências com segurança."),
-    ("info-docs", "Usar um editor de texto", "Escrever, salvar e compartilhar."),
-    ("info-planilha", "Planilha simples", "Organizar gastos em colunas."),
-    ("info-golpes", "Reconhecer golpes online", "Links falsos e como se proteger."),
-    ("info-curriculo", "Fazer um currículo digital", "Modelo pronto para enviar."),
-    ("info-arquivos", "Guardar e encontrar arquivos", "Pastas, nomes e buscas."),
-    ("info-usb", "Usar um pendrive", "Copiar e ejetar com segurança."),
-    ("info-impressora", "Imprimir um documento", "Escolher impressora e papel."),
-    ("info-videochamada", "Fazer uma videochamada", "Câmera, microfone e link."),
-    ("info-mapa", "Usar mapas e GPS", "Encontrar endereços e rotas."),
-    ("info-compras", "Comprar online com segurança", "Sites confiáveis e pagamento."),
-    ("info-banco", "Usar o app do banco", "Saldo, extrato e pagamentos."),
-    ("info-sus", "Usar serviços públicos online", "Agendamentos e documentos."),
-    ("info-nuvem", "Guardar na nuvem", "Acessar arquivos de qualquer lugar."),
-    ("info-wifi", "Conectar ao Wi-Fi", "Redes, senha e segurança."),
-    ("info-bateria", "Cuidar da bateria", "Carregar e economizar energia."),
-    ("info-acessibilidade", "Recursos de acessibilidade", "Zoom, leitor de tela e contraste."),
-    ("info-formatar", "Formatar um texto", "Negrito, itálico e alinhamento."),
-    ("info-pdf", "Trabalhar com PDF", "Abrir, preencher e assinar."),
-    ("info-qrcode", "Ler um QR Code", "Abrir links e pagar."),
-    ("info-backup", "Fazer backup", "Proteger seus arquivos."),
-    ("info-senhas-gestor", "Gerenciar várias senhas", "Organizar sem anotar no papel."),
-    ("info-ia", "Usar assistentes de IA", "Pedir ajuda e revisar respostas."),
-    ("info-codigo", "Primeiros passos em programação", "O que é um algoritmo."),
-    ("info-scratch", "Criar com blocos", "Lógica visual passo a passo."),
-    ("info-html", "Uma página web simples", "Título, texto e imagem."),
-    ("info-dados", "Entender dados e gráficos", "Transformar números em decisões."),
-    ("info-privacidade", "Proteger sua privacidade", "O que compartilhar e o que não."),
-    ("info-etiqueta", "Boa convivência online", "Respeito e comunicação clara."),
-    ("info-acessivel", "Criar conteúdo acessível", "Texto alternativo e contraste."),
-]
-
-MAT = [
-    ("mat-contar", "Contar até 100", "Contagem com objetos do dia a dia."),
-    ("mat-soma", "Somar com as mãos", "2 + 3 com dedos e desenhos."),
-    ("mat-subtracao", "Subtrair na prática", "Tinha 5, tirei 2."),
-    ("mat-dinheiro", "Contar dinheiro", "Moedas e notas do real."),
-    ("mat-troco", "Calcular o troco", "Paguei R$10, quanto volta?"),
-    ("mat-multiplicar", "Multiplicar é repetir", "3 vezes 4 = 4+4+4."),
-    ("mat-dividir", "Dividir para repartir", "12 balas para 3 pessoas."),
-    ("mat-medidas", "Medir comprimento", "Metro e centímetro."),
-    ("mat-peso", "Medir peso", "Quilos e gramas."),
-    ("mat-horas", "Ler as horas", "Relógio analógico e digital."),
-    ("mat-calendario", "Usar o calendário", "Dias, semanas e meses."),
-    ("mat-receita", "Matemática na receita", "Dobrar e reduzir à metade."),
-    ("mat-grafico", "Ler um gráfico", "Barras e linhas."),
-    ("mat-porcentagem", "Porcentagem no dia a dia", "Desconto de 20%."),
-    ("mat-fracoes", "Frações na pizza", "Metade, terço e quarto."),
-    ("mat-formas", "Formas geométricas", "Círculo, quadrado e triângulo."),
-    ("mat-area", "Área e perímetro", "Medir um terreno."),
-    ("mat-angulos", "Ângulos", "Reto, agudo e obtuso."),
-    ("mat-regra3", "Regra de três simples", "Proporções do cotidiano."),
-    ("mat-sequencias", "Sequências e padrões", "Descobrir o próximo número."),
-    ("mat-equacao", "Equações simples", "Descobrir o valor de x."),
-    ("mat-negativos", "Números negativos", "Temperatura e dívidas."),
-    ("mat-estatistica", "Média e mediana", "Resumir um conjunto de dados."),
-    ("mat-probabilidade", "Probabilidade", "Chance de acontecer."),
-    ("mat-juros", "Juros simples", "Entender um empréstimo."),
-    ("mat-orcamento", "Fazer um orçamento", "Entradas e saídas."),
-    ("mat-nota-fiscal", "Conferir uma nota fiscal", "Itens, valores e total."),
-    ("mat-conversao", "Converter unidades", "Metros, litros e gramas."),
-    ("mat-tabela", "Ler uma tabela", "Organizar informação."),
-    ("mat-simetria", "Simetria", "Formas espelhadas."),
-    ("mat-escala", "Escalas e plantas", "Ler uma planta simples."),
-    ("mat-tempo", "Calcular tempo", "Duração entre horários."),
-    ("mat-capacidade", "Medir capacidade", "Litros e mililitros."),
-    ("mat-numeros-romanos", "Números romanos", "I, V, X, L, C."),
-    ("mat-pares", "Números pares e ímpares", "Reconhecer o padrão."),
-    ("mat-primos", "Números primos", "Só divide por 1 e ele mesmo."),
-    ("mat-mdc", "MDC e MMC", "Fatores comuns."),
-    ("mat-potencias", "Potências e raízes", "2² = 4, √9 = 3."),
-    ("mat-desconto", "Calcular descontos", "Comparar preços."),
-    ("mat-planilha", "Matemática na planilha", "Somar colunas automaticamente."),
-]
-
-IDIO = [
-    ("idio-cumprimentos-en", "Cumprimentos em inglês", "Hello, good morning."),
-    ("idio-apresentar-en", "Me apresentar em inglês", "My name is... I am from Brazil."),
-    ("idio-numeros-en", "Números em inglês", "One to twenty."),
-    ("idio-comida-en", "Comida em inglês", "Rice, beans, water, coffee."),
-    ("idio-cores-en", "Cores em inglês", "Red, blue, green."),
-    ("idio-dias-en", "Dias e meses em inglês", "Monday, January."),
-    ("idio-familia-en", "Família em inglês", "Mother, father, sister."),
-    ("idio-mercado-en", "No mercado em inglês", "How much is this?"),
-    ("idio-onibus-en", "Transporte em inglês", "Where is the bus stop?"),
-    ("idio-medico-en", "No médico em inglês", "I have a headache."),
-    ("idio-trabalho-en", "No trabalho em inglês", "Can you help me?"),
-    ("idio-viagem-en", "Em viagem em inglês", "Where is the hotel?"),
-    ("idio-cumprimentos-es", "Cumprimentos em espanhol", "Hola, buenos días."),
-    ("idio-apresentar-es", "Me apresentar em espanhol", "Me llamo... Soy de Brasil."),
-    ("idio-numeros-es", "Números em espanhol", "Uno al veinte."),
-    ("idio-comida-es", "Comida em espanhol", "Arroz, frijoles, agua."),
-    ("idio-falsos-amigos", "Falsos amigos PT-ES", "Exquisito, largo, oficina."),
-    ("idio-mercado-es", "No mercado em espanhol", "¿Cuánto cuesta?"),
-    ("idio-viagem-es", "Em viagem em espanhol", "¿Dónde está el hotel?"),
-    ("idio-medico-es", "No médico em espanhol", "Me duele la cabeza."),
-    ("idio-pt-estrangeiros", "Português para estrangeiros", "Bom dia! Como falar no Brasil."),
-    ("idio-entrevista-pt", "Entrevista de trabalho", "Perguntas comuns e respostas."),
-    ("idio-telefone-pt", "Falar ao telefone", "Atenção, quem fala?"),
-    ("idio-email-pt", "Escrever e-mail profissional", "Assunto, saudação e despedida."),
-    ("idio-apresentacao-pt", "Fazer uma apresentação", "Estrutura e linguagem."),
-    ("idio-reuniao-pt", "Participar de uma reunião", "Concordar e discordar."),
-    ("idio-escrita-pt", "Escrever com clareza", "Frases curtas e diretas."),
-    ("idio-leitura-en", "Ler um texto curto em inglês", "Ideia principal."),
-    ("idio-escuta-en", "Ouvir e entender inglês", "Palavras-chave."),
-    ("idio-pronuncia-en", "Pronúncia em inglês", "Sons difíceis."),
-    ("idio-pronuncia-es", "Pronúncia em espanhol", "Sons e ritmo."),
-    ("idio-cultura-br", "Cultura brasileira", "Regiões, festas e costumes."),
-]
+def seed_from_content(db, track: str, level: str, items) -> int:
+    """Semeia módulos com conteúdo curado: (id, título, subtítulo, etapas)."""
+    for i, (mid, title, sub, step_rows) in enumerate(items):
+        add(db, mid, track, title, sub, level, i // 8, 12 + (i % 3) * 2, i % 7 == 0, step_rows)
+    return len(items)
 
 
 def main() -> int:
@@ -360,9 +235,9 @@ def main() -> int:
 
     n = 0
     n += seed_alfabetizacao(db)
-    n += seed_topics(db, "informatica", "Começo", INFO)
-    n += seed_topics(db, "matematica", "Essencial", MAT)
-    n += seed_topics(db, "idiomas", "A1 · Iniciante", IDIO)
+    n += seed_from_content(db, "informatica", "Começo", INFORMATICA)
+    n += seed_from_content(db, "matematica", "Essencial", MATEMATICA)
+    n += seed_from_content(db, "idiomas", "A1 · Iniciante", IDIOMAS)
     db.commit()
 
     for tid in TRACKS:
