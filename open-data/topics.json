@@ -2,7 +2,7 @@
   "portal": "aprende-brasil",
   "repo": "belentani7/aprende-brasil",
   "dominio": "Educacao PT-BR e cidadania",
-  "generado_utc": "2026-09-12T21:24:00+00:00",
+  "generado_utc": "2026-09-15T14:35:52+00:00",
   "orden_idiomas": [
     "pt",
     "es",
@@ -20,7 +20,8 @@
       "tema": "vocabulario-pt",
       "fuente": "Tatoeba EN",
       "spec": "tatoeba:eng:escola",
-      "ok": true
+      "ok": false,
+      "error": "HTTP Error 429: Too Many Requests"
     },
     {
       "tema": "territorio-e-cidadania",
@@ -33,12 +34,48 @@
       "fuente": "Project Gutenberg",
       "spec": "gutenberg:55752",
       "ok": true
+    },
+    {
+      "tema": "dados-abertos-br",
+      "fuente": "IBGE",
+      "spec": "ibge_estados",
+      "ok": true
+    },
+    {
+      "tema": "dados-abertos-br",
+      "fuente": "REST Countries",
+      "spec": "restcountries",
+      "ok": true
+    },
+    {
+      "tema": "ciencia-br",
+      "fuente": "GBIF",
+      "spec": "gbif:fauna",
+      "ok": true
+    },
+    {
+      "tema": "ciencia-br",
+      "fuente": "OpenAlex",
+      "spec": "openalex:Brazil education",
+      "ok": true
+    },
+    {
+      "tema": "cultura-e-historia",
+      "fuente": "Wikipedia PT",
+      "spec": "wiki:pt:História do Brasil",
+      "ok": true
+    },
+    {
+      "tema": "cultura-e-historia",
+      "fuente": "Wikisource PT",
+      "spec": "mediawiki:pt.wikisource.org:historia",
+      "ok": true
     }
   ],
   "temas": [
     {
       "tema": "vocabulario-pt",
-      "fuentes_ok": 2,
+      "fuentes_ok": 1,
       "fuentes_total": 2
     },
     {
@@ -50,6 +87,21 @@
       "tema": "lectura-en-portugues",
       "fuentes_ok": 1,
       "fuentes_total": 1
+    },
+    {
+      "tema": "dados-abertos-br",
+      "fuentes_ok": 2,
+      "fuentes_total": 2
+    },
+    {
+      "tema": "ciencia-br",
+      "fuentes_ok": 2,
+      "fuentes_total": 2
+    },
+    {
+      "tema": "cultura-e-historia",
+      "fuentes_ok": 2,
+      "fuentes_total": 2
     }
   ]
 }

@@ -32,33 +32,8 @@
     {
       "fuente": "Tatoeba EN",
       "spec": "tatoeba:eng:escola",
-      "ok": true,
-      "datos": [
-        {
-          "origen": "Imos á escola.",
-          "traduccion": "Wir gehen zur Schule."
-        },
-        {
-          "origen": "Estou na escola.",
-          "traduccion": "Mi estas en la lernejo."
-        },
-        {
-          "origen": "Temos muitas escolas.",
-          "traduccion": "We have many schools."
-        },
-        {
-          "origen": "Escolas foram construídas.",
-          "traduccion": "Schools were built."
-        },
-        {
-          "origen": "Vai à escola.",
-          "traduccion": "Go to school."
-        },
-        {
-          "origen": "Gosto da escola.",
-          "traduccion": "I like school."
-        }
-      ]
+      "ok": false,
+      "error": "HTTP Error 429: Too Many Requests"
     }
   ]
 }
