@@ -81,6 +81,7 @@ válido, ids únicos, nenhuma trilha órfã).
 | --- | --- | --- |
 | Cloudflare Pages | https://aprende-brasil-5gq.pages.dev | ✅ |
 | Vercel | https://aprende-brasil-belentani7pedro-6758s-projects.vercel.app | ✅ |
+| GitHub Pages | https://belentani7.github.io/aprende-brasil/ | ✅ (rotas SPA respondem 404 + app) |
 
 O site é **100% estático**: o currículo viaja como JSON (`client/src/data/curriculum.json`)
 e o progresso/favoritos ficam no `localStorage` do navegador. Não há backend em produção.
@@ -147,7 +148,10 @@ Notas de campo (custaram tempo, ficam registradas):
 - **Cloudflare Pages**: `_redirects` tem prioridade **sobre** os assets estáticos, e um
   catch-all `/*` serve `/assets/*.js` como `text/html`. Por isso o fallback é uma
   Pages Function, que só cai no `index.html` quando o asset realmente não existe.
-- **GitHub Pages**: serve em subpath, então o build precisa de `--base=/aprende-brasil/`.
+- **GitHub Pages**: serve em subpath, então o build precisa de `--base=/aprende-brasil/`
+  **e** o `WouterRouter` precisa de `base` (em `client/src/App.tsx`), senão as rotas
+  caem no NotFound. Como Pages não tem rewrites, o fallback é o `404.html` — as rotas
+  SPA respondem com status 404 mas entregam a app e funcionam.
 - **Deployment Protection** na Vercel bloqueia o site público (302 para SSO). Desative
   com `ssoProtection: null` via API do projeto.
 
