@@ -1,14 +1,14 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Sobre from "./pages/Sobre";
 import Modulo from "./pages/Modulo";
 
-function Router() {
+function Routes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -26,7 +26,12 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          {/* BASE_URL acompanha o --base do Vite: "" nos CDNs e
+              "/aprende-brasil" no GitHub Pages, que serve em subpath.
+              O trailing slash é removido: o wouter espera base sem ele. */}
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Routes />
+          </WouterRouter>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
