@@ -57,6 +57,22 @@ pnpm build           # gera dist/public
 pnpm start           # uvicorn em :8000 servindo dist/public
 ```
 
+## Testes
+
+Suíte Python (pytest) que valida a API endpoint a endpoint e a integridade do
+currículo em `data/aprende.db`:
+
+```bash
+pip install -r requirements-dev.txt
+pnpm test:py          # = python -m pytest
+```
+
+Cobre: health, trilhas, catálogo (paginação, busca, filtro por trilha),
+módulo + etapas ordenadas, 404 de módulo inexistente, tutor (fallback local),
+progresso (monotônico), estatísticas e favoritos — mais 6 checagens de dados
+(205 módulos, 1025 etapas, 5 etapas na ordem certa por módulo, `content_json`
+válido, ids únicos, nenhuma trilha órfã).
+
 ## API
 
 | Método | Rota | Descrição |

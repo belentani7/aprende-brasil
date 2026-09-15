@@ -117,7 +117,7 @@ export default function Sobre() {
           <div className="sobre-step">
             <span className="sobre-step-num">2</span>
             <h4>Popule o conteúdo</h4>
-            <p>Rode <code>python -m scripts.seed_database</code> para criar os módulos educativos.</p>
+            <p>Rode <code>pnpm seed</code> para baixar o banco aberto e gerar os 205 módulos educativos.</p>
           </div>
           <div className="sobre-step">
             <span className="sobre-step-num">3</span>

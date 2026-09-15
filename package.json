@@ -10,6 +10,7 @@
     "start": "uvicorn api.main:app --host 0.0.0.0 --port 8000",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "test:py": "python -m pytest",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "seed": "python -m scripts.fetch_open_data && python -m scripts.build_curriculum"
   },

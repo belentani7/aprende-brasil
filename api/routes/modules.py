@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from ..database import get_db
 from ..models import Module, ModuleStep
@@ -44,7 +44,7 @@ def featured_modules(db: Session = Depends(get_db)):
 def get_module(module_id: str, db: Session = Depends(get_db)):
     m = db.query(Module).options(joinedload(Module.steps)).filter(Module.id == module_id).first()
     if not m:
-        return {"error": "Módulo não encontrado"}, 404
+        raise HTTPException(status_code=404, detail="Módulo não encontrado")
     data = _serialize_module(m)
     data["steps"] = [
         {
