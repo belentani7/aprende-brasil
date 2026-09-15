@@ -313,3 +313,49 @@ h1 { margin-top: 9px; color: #282c26; font-size: clamp(30px, 4vw, 44px); font-we
   .tutor-fab { right: 16px; bottom: 16px; }.tutor-panel { right: 15px; bottom: 69px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* ── Sobre / Landing Page ─────────────────────────────── */
+.sobre-page { min-height: 100vh; background: var(--background); }
+.sobre-header { position: sticky; top: 0; z-index: 50; background: rgba(247,246,242,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 28px; }
+.sobre-header-inner { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+.sobre-hero { padding: 80px 28px 60px; text-align: center; }
+.sobre-hero-inner { max-width: 720px; margin: 0 auto; }
+.sobre-hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(28px, 5vw, 48px); font-weight: 800; line-height: 1.15; color: var(--foreground); margin-bottom: 20px; }
+.sobre-hero-sub { font-size: 17px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; }
+.sobre-hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.sobre-stats { background: var(--sidebar); color: var(--sidebar-foreground); padding: 32px 28px; }
+.sobre-stats-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
+.sobre-stat strong { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; display: block; }
+.sobre-stat span { font-size: 13px; opacity: 0.7; }
+.sobre-section { padding: 60px 28px; max-width: 1080px; margin: 0 auto; }
+.sobre-section--alt { background: var(--card); border-radius: 18px; max-width: 1020px; margin: 40px auto; padding: 48px 36px; }
+.sobre-section h2 { font-family: 'Syne', sans-serif; font-size: clamp(22px, 3.5vw, 34px); font-weight: 700; margin-bottom: 10px; }
+.sobre-section-sub { color: var(--muted); font-size: 16px; margin-bottom: 36px; max-width: 600px; }
+.sobre-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.sobre-card { background: var(--card); border-radius: 14px; padding: 28px 24px; border: 1px solid var(--border); }
+.sobre-card h3 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin: 14px 0 8px; }
+.sobre-card p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.sobre-card span { font-size: 12px; color: var(--muted-foreground); font-weight: 500; }
+.sobre-card--orange svg { color: var(--orange); }
+.sobre-card--blue svg { color: var(--blue); }
+.sobre-card--violet svg { color: var(--violet); }
+.sobre-card--green svg { color: var(--green); }
+.sobre-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.sobre-feature { display: flex; gap: 16px; align-items: flex-start; }
+.sobre-feature svg { color: var(--orange); flex-shrink: 0; margin-top: 2px; }
+.sobre-feature h4 { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.sobre-feature p { font-size: 14px; color: var(--muted); line-height: 1.55; }
+.sobre-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.sobre-step { text-align: center; padding: 24px 16px; }
+.sobre-step-num { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--orange); color: white; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 12px; }
+.sobre-step h4 { font-weight: 600; margin-bottom: 6px; }
+.sobre-step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.sobre-step code { background: var(--border); padding: 2px 6px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 12px; }
+.sobre-cta { text-align: center; padding: 60px 28px; background: linear-gradient(135deg, var(--orange-soft), var(--blue-soft)); border-radius: 0; }
+.sobre-cta h2 { font-family: 'Syne', sans-serif; font-size: clamp(24px, 4vw, 38px); font-weight: 800; margin-bottom: 24px; line-height: 1.2; }
+.sobre-footer { text-align: center; padding: 28px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--border); }
+.primary-button--large { padding: 14px 28px; font-size: 16px; }
+@media (max-width: 640px) {
+  .sobre-stats-inner { grid-template-columns: repeat(2, 1fr); }
+  .sobre-section--alt { margin: 20px 12px; padding: 28px 20px; }
+}

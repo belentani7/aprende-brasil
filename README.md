@@ -1,67 +1,112 @@
 # Aprende Brasil
 
-Aprende Brasil es un MVP de plataforma educativa web en portugués brasileño. La experiencia está diseñada alrededor de pequeños pasos de aprendizaje y combina tres trilhas: **Informática**, **Matemática** e **Idiomas**. El objetivo de catálogo es de 2.000 módulos, distribuidos en 680 de Informática, 720 de Matemática y 600 de Idiomas.
+Plataforma de **alfabetização e educação aberta** em português brasileiro, para
+quem não teve acesso à escola e para qualquer grupo que queira se organizar como
+uma **instituição mínima** — sem matrícula, sem dados pessoais, sem publicidade.
 
-## Estado actual
+O conteúdo é gerado a partir de **bancos de dados abertos** por scripts Python,
+e a plataforma roda **standalone**: frontend React + API FastAPI + SQLite.
 
-La primera versión entrega un dashboard responsive de estudiante con navegación lateral, saludo contextual, módulo recomendado, progreso general, tiempo de estudio semanal, meta de sesiones, selección de trilha, búsqueda de módulos, agenda, modal de detalle e interacción con el tutor Nilo. Todos los botones principales tienen feedback visible y la interfaz se adapta a escritorio y móvil.
+## O que está pronto
 
-Nilo se ejecuta mediante un procedimiento server-side (`tutor.ask`) que valida el mensaje, fija el área de estudio y utiliza el helper LLM preconfigurado del proyecto. El prompt del tutor limita la respuesta, favorece pistas antes que soluciones y evita inventar notas, progreso o datos personales. La interfaz también ofrece una alternativa local con `speechSynthesis` en pt-BR para probar lectura en voz alta sin exponer ninguna clave.
+- **205 módulos** com 5 etapas pedagógicas cada (entender → exemplo → praticar →
+  verificar → próximo passo): 93 de Alfabetização, 40 de Informática, 40 de
+  Matemática e 32 de Idiomas.
+- **Trilha de Alfabetização real**: letras, famílias silábicas, temas de
+  vocabulário, frases e textos do dia a dia (conta de luz, bula, formulário…).
+- **Dashboard** do estudante: trilhas, catálogo com busca, módulos em destaque,
+  agenda e tutor.
+- **Vista de leção** (`/modulo/:id`): passo a passo, progresso salvo, favoritos
+  e leitura em voz alta (pt-BR) no navegador.
+- **Tutor Nilo** com LLM opcional (OpenAI-compatível) e fallback local offline.
+- **API de progresso e favoritos** por usuário.
 
-La integración de OpenVoice está preparada a nivel de producto y contrato, pero no se presenta como activa porque todavía no existe un endpoint o una credencial de inferencia suministrada para este proyecto. Cuando exista el proveedor, debe conectarse detrás de un adaptador server-side y no desde el navegador.
+## Arquitetura
 
-## Arquitectura
-
-El proyecto utiliza React, TypeScript, Vite, TailwindCSS, Express, tRPC, Drizzle, MySQL/TiDB, almacenamiento de objetos y autenticación gestionada por Manus OAuth. El frontend vive en `client/`, los procedimientos en `server/`, el esquema en `drizzle/` y la documentación operativa en la raíz.
-
-La estructura prevista para producción es:
-
-| Capa | Responsabilidad |
+| Camada | Tecnologia |
 | --- | --- |
-| Experiencia | Dashboard, catálogo, progreso, agenda, tutor, accesibilidad y responsive design. |
-| API | Procedimientos tRPC tipados, validación Zod, autorización y límites de uso. |
-| Datos | Usuarios, trilhas, módulos, pasos, progreso, favoritos, metas, conversaciones y versiones editoriales. |
-| Objetos | Vídeos, audios, imágenes, exportaciones y materiales descargables mediante storage, no dentro del bundle. |
-| IA | Tutor server-side con prompt de sistema, moderación, métricas y fallback controlado. |
-| Voz | Captura opcional, transcripción, síntesis configurable y perfil de voz con consentimiento. |
+| Experiência | React 19 + Vite + TailwindCSS 4 + shadcn/ui + wouter |
+| API | FastAPI + SQLAlchemy (Python 3.11+) |
+| Dados | SQLite (`data/aprende.db`) |
+| Conteúdo | Scripts Python + banco de palavras aberto |
 
-“Dos gigabytes de plataforma” debe entenderse como una capacidad de almacenamiento planificada. El bundle web debe continuar siendo pequeño. Los binarios grandes deben ir a almacenamiento de objetos con metadatos, hash de integridad, límites de tamaño, control de acceso y política de retención.
-
-## 2.000 módulos
-
-El catálogo no se infla con placeholders sin valor pedagógico. La aplicación ya muestra una muestra representativa y la estructura está preparada para cargar el catálogo curado mediante importaciones versionadas. Antes de publicar un módulo se requiere objetivo observable, explicación, ejemplo, práctica, comprobación, siguiente paso, nivel, duración, prerequisitos, idioma, versión y revisión editorial. La distribución editorial objetivo es:
-
-| Área | Módulos | Rutas de ejemplo |
-| --- | ---: | --- |
-| Informática | 680 | Alfabetización digital, pensamiento computacional, datos, creación web, programación y automatización. |
-| Matemática | 720 | Numeración, álgebra, funciones, geometría, medida, estadística, probabilidad y modelación. |
-| Idiomas | 600 | Inglés, español, portugués para hablantes de otras lenguas y comunicación profesional. |
-
-## Voz OpenVoice
-
-OpenVoice describe clonación de color tonal desde una referencia corta, control de estilo y uso multilingüe; su repositorio oficial publica V1 y V2 bajo MIT.[1] El artículo académico describe control de emoción, acento, ritmo, pausas, entonación y clonación cross-lingual zero-shot.[2]
-
-Para la integración real se recomienda un servicio aislado de voz con cola de trabajos, límites de duración, caché de audio, borrado y observabilidad. El entorno web no debe ejecutar inferencia pesada dentro de una petición corta si el runtime no la soporta. Las variables sugeridas son `OPENVOICE_API_URL`, `OPENVOICE_API_KEY`, `OPENVOICE_MODEL` y `OPENVOICE_VERSION`, administradas como secretos server-side. El flujo debe comprobar que la persona tiene derecho a usar la grabación, permitir borrar el perfil y conservar únicamente el audio necesario. En ausencia del endpoint, la aplicación comunica la limitación y utiliza `speechSynthesis` del navegador.
-
-## Desarrollo local
-
-```bash
-pnpm install
-pnpm check
-pnpm test
-pnpm build
+```
+client/    frontend React
+api/       backend FastAPI (main, models, routes/)
+scripts/   fetch_open_data.py, build_curriculum.py
+data/      aprende.db + open/palavras-pt.txt
+dist/public  build do frontend (vite build)
 ```
 
-El prompt maestro de producto se encuentra en [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) y contiene la especificación de contenido, UX, seguridad, accesibilidad, analítica, voz, criterios de aceptación y camino de escalado.
+## Rodar
 
-## Calidad y próximos pasos
+```bash
+# 1. dependências
+pnpm install
+pip install -r requirements.txt
 
-La versión actual incluye pruebas del logout y del contrato `tutor.ask`. Antes de producción se deben añadir migraciones y procedimientos para el catálogo, eventos de progreso, favoritos, metas y agenda. Después conviene implementar roles de docente y editor, paginación real, importador de módulos, moderación de conversaciones, consentimiento de voz, proveedor OpenVoice, telemetría de aprendizaje y revisión WCAG 2.2 AA con usuarios reales.
+# 2. dados: baixa o banco aberto e gera o currículo
+pnpm seed            # = python -m scripts.fetch_open_data && python -m scripts.build_curriculum
 
-No se deben publicar los 2.000 módulos sólo por alcanzar una cifra. La prioridad es que cada módulo tenga competencia verificable, revisión humana, derechos de contenido y una práctica que ayude a transferir lo aprendido.
+# 3. desenvolvimento (duas terminais)
+pnpm dev             # Vite em :5173 (proxy /api -> :8000)
+pnpm dev:api         # FastAPI em :8000
 
-## Referencias
+# 4. produção (um só serviço: FastAPI serve o SPA compilado)
+pnpm build           # gera dist/public
+pnpm start           # uvicorn em :8000 servindo dist/public
+```
 
-[1]: https://github.com/myshell-ai/OpenVoice "myshell-ai/OpenVoice — repositorio oficial y documentación"
+## API
 
-[2]: https://arxiv.org/abs/2312.01479 "OpenVoice: Versatile Instant Voice Cloning — artículo académico"
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| `GET` | `/api/health` | status |
+| `GET` | `/api/tracks` | trilhas + contagem de módulos |
+| `GET` | `/api/modules?track=&search=&page=` | catálogo paginado |
+| `GET` | `/api/modules/featured` | destaques |
+| `GET` | `/api/modules/{id}` | módulo + etapas |
+| `POST` | `/api/tutor/ask` | tutor Nilo |
+| `GET`/`POST` | `/api/progress` | progresso por módulo |
+| `GET`/`POST` | `/api/favorites` | favoritos (toggle) |
+| `GET` | `/api/stats` | resumo do usuário |
+
+## Bancos de dados abertos
+
+- **Lista de palavras do português** — [pythonprobr/palavras](https://github.com/pythonprobr/palavras) (MIT),
+  baixada e normalizada por `scripts/fetch_open_data.py` em `data/open/palavras-pt.txt`.
+- O currículo é construído por `scripts/build_curriculum.py` a partir dessa base
+  e de listas curadas (informática, matemática, idiomas).
+
+Os scripts usam **apenas a biblioteca padrão** para o download.
+
+## Tutor Nilo (LLM opcional)
+
+Sem configuração, o tutor responde com orientações locais (offline). Para usar um
+LLM, defina variáveis de ambiente (endpoint OpenAI-compatível):
+
+```
+LLM_API_URL=https://api.exemplo.com/v1/chat/completions
+LLM_API_KEY=...
+LLM_MODEL=gpt-4o-mini
+```
+
+## Deploy
+
+- **Frontend** (`dist/public`): estático, vai para Vercel / Cloudflare Pages
+  (`vercel.json` já configurado com `vite build`).
+- **Backend** (FastAPI): precisa de host Python (Render, Fly.io, Railway ou VPS).
+  Um host estático não executa o backend — para produção completa, sirva o SPA
+  pelo próprio FastAPI (`pnpm start`) ou aponte `VITE_API_URL` para o backend.
+
+## Próximos passos
+
+- Mais temas de alfabetização (transporte, saúde, trabalho) e exercícios com correção.
+- Importador de módulos versionado + revisão editorial.
+- Perfis de docente/editor, metas e agenda persistidas.
+- Voz (OpenVoice/TTS) atrás de um adaptador server-side.
+- Revisão WCAG 2.2 AA com usuários reais.
+
+## Licença
+
+MIT.
