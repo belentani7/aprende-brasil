@@ -27,6 +27,8 @@ jobs:
           cache: pnpm
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
+      - name: Verificar currículo exportado
+        run: python -m scripts.export_curriculum --check
       - name: Lint
         run: pnpm run --if-present lint
       - name: Typecheck

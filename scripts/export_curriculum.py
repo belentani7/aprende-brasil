@@ -1,91 +1,67 @@
 #!/usr/bin/env python3
-"""Exporta o currículo do SQLite para JSON estático consumido pelo cliente.
+"""Exporta o currículo SQLite usando apenas Python padrão.
 
-Gera client/src/data/curriculum.json a partir de data/aprende.db, para que a
-plataforma rode 100% no navegador (sem backend): Vercel, Netlify, Cloudflare
-Pages ou GitHub Pages.
-
-Rodar: python -m scripts.export_curriculum
+Use ``--check`` em CI para detectar JSON desatualizado sem alterar arquivos.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
-import sys
+import sqlite3
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from api.database import SessionLocal  # noqa: E402
-from api.models import Module, ModuleStep, Track  # noqa: E402
-
 ROOT = Path(__file__).resolve().parents[1]
+DB = ROOT / "data" / "aprende.db"
 OUT = ROOT / "client" / "src" / "data" / "curriculum.json"
 
 
+def build_payload() -> dict:
+    if not DB.is_file():
+        raise FileNotFoundError(DB)
+    db = sqlite3.connect(f"file:{DB.as_posix()}?mode=ro", uri=True)
+    db.row_factory = sqlite3.Row
+    try:
+        counts = dict(db.execute("SELECT track_id, COUNT(*) FROM modules GROUP BY track_id"))
+        tracks = [dict(row) | {"module_count": counts.get(row["id"], 0)}
+                  for row in db.execute("SELECT id, label, eyebrow, description, color, icon, target_modules FROM tracks ORDER BY id")]
+        steps_by_module: dict[str, list[dict]] = {}
+        for row in db.execute('SELECT module_id, "order", step_type, title, content_json FROM module_steps ORDER BY module_id, "order"'):
+            steps_by_module.setdefault(row["module_id"], []).append({
+                "order": row["order"], "type": row["step_type"], "title": row["title"],
+                "content": json.loads(row["content_json"]) if row["content_json"] else None,
+            })
+        modules = []
+        for row in db.execute("""SELECT id, track_id, title, subtitle, level, level_order,
+                              duration_min, age_group, objectives, featured, accent, icon
+                              FROM modules ORDER BY level_order, title"""):
+            modules.append({
+                "id": row["id"], "track_id": row["track_id"], "title": row["title"],
+                "subtitle": row["subtitle"], "level": row["level"],
+                "level_order": row["level_order"], "duration_min": row["duration_min"],
+                "age_group": row["age_group"], "objectives": row["objectives"],
+                "featured": bool(row["featured"]), "accent": row["accent"],
+                "icon": row["icon"], "steps": steps_by_module.get(row["id"], []),
+            })
+        return {"tracks": tracks, "modules": modules}
+    finally:
+        db.close()
+
+
 def main() -> int:
-    db = SessionLocal()
-
-    tracks = [
-        {
-            "id": t.id,
-            "label": t.label,
-            "eyebrow": t.eyebrow,
-            "description": t.description,
-            "color": t.color,
-            "icon": t.icon,
-            "target_modules": t.target_modules,
-            "module_count": db.query(Module).filter(Module.track_id == t.id).count(),
-        }
-        for t in db.query(Track).order_by(Track.id).all()
-    ]
-
-    modules = []
-    for m in db.query(Module).order_by(Module.level_order, Module.title).all():
-        steps = (
-            db.query(ModuleStep)
-            .filter(ModuleStep.module_id == m.id)
-            .order_by(ModuleStep.order)
-            .all()
-        )
-        modules.append(
-            {
-                "id": m.id,
-                "track_id": m.track_id,
-                "title": m.title,
-                "subtitle": m.subtitle,
-                "level": m.level,
-                "level_order": m.level_order,
-                "duration_min": m.duration_min,
-                "age_group": m.age_group,
-                "objectives": m.objectives,
-                "featured": bool(m.featured),
-                "accent": m.accent,
-                "icon": m.icon,
-                "steps": [
-                    {
-                        "order": s.order,
-                        "type": s.step_type,
-                        "title": s.title,
-                        "content": json.loads(s.content_json) if s.content_json else None,
-                    }
-                    for s in steps
-                ],
-            }
-        )
-
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"tracks": tracks, "modules": modules}
-    OUT.write_text(
-        json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
-        encoding="utf-8",
-    )
-    total_steps = sum(len(m["steps"]) for m in modules)
-    print(
-        f"{len(modules)} módulos, {total_steps} etapas -> "
-        f"{OUT.relative_to(ROOT)} ({OUT.stat().st_size / 1024:.0f} KB)"
-    )
-    db.close()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="falha se o JSON versionado diferir do banco")
+    args = parser.parse_args()
+    payload = build_payload()
+    rendered = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    if args.check:
+        if not OUT.is_file() or OUT.read_text(encoding="utf-8") != rendered:
+            parser.exit(1, f"Currículo ausente/desatualizado: {OUT}\nExecute python -m scripts.export_curriculum\n")
+    else:
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(rendered, encoding="utf-8")
+    total_steps = sum(len(m["steps"]) for m in payload["modules"])
+    print(f"{len(payload['modules'])} módulos, {total_steps} etapas -> {OUT.relative_to(ROOT)}")
     return 0
 
 

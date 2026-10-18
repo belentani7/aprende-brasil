@@ -49,6 +49,7 @@ pip install -r requirements.txt
 
 # 2. dados: baixa o banco aberto e gera o currículo
 pnpm seed            # = python -m scripts.fetch_open_data && python -m scripts.build_curriculum
+python -m scripts.export_curriculum  # atualiza o JSON estático versionado para Vercel/Pages
 
 # 3. desenvolvimento (duas terminais)
 pnpm dev             # Vite em :5173 (proxy /api -> :8000)
@@ -126,6 +127,8 @@ LLM_MODEL=gpt-4o-mini
   baixada e normalizada por `scripts/fetch_open_data.py` em `data/open/palavras-pt.txt`.
 - O currículo é construído por `scripts/build_curriculum.py` a partir dessa base
   e de listas curadas (informática, matemática, idiomas).
+- O JSON do navegador é gerado de `data/aprende.db` com Python padrão. CI executa
+  `python -m scripts.export_curriculum --check` para detectar dados desatualizados.
 
 Os scripts usam **apenas a biblioteca padrão** para o download.
 
