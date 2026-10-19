@@ -1,0 +1,360 @@
+{
+  "tracks": [
+    {
+      "id": "alfabetizacao",
+      "name": "Alfabetização",
+      "description": "Trilha de alfabetização real: letras, famílias silábicas, temas de vocabulário, frases e textos do dia a dia",
+      "moduleCount": 93
+    },
+    {
+      "id": "informatica",
+      "name": "Informática",
+      "description": "Fundamentos de informática e computação",
+      "moduleCount": 40
+    },
+    {
+      "id": "matematica",
+      "name": "Matemática",
+      "description": "Conceitos matemáticos desde o básico até o avançado",
+      "moduleCount": 40
+    },
+    {
+      "id": "idiomas",
+      "name": "Idiomas",
+      "description": "Aprender outros idiomas, especialmente inglês e espanhol",
+      "moduleCount": 32
+    }
+  ],
+  "modules": [
+    {
+      "id": "modulo-001",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 1",
+      "description": "Etapa 1 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-001",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-002",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-003",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-004",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-005",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-002",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 2",
+      "description": "Etapa 2 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-006",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-007",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-008",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-009",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-010",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-003",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 3",
+      "description": "Etapa 3 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-011",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-012",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-013",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-014",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-015",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-004",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 4",
+      "description": "Etapa 4 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-016",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-017",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-018",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-019",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-020",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-005",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 5",
+      "description": "Etapa 5 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-021",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-022",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-023",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-024",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-025",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-006",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 6",
+      "description": "Etapa 6 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-026",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-027",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-028",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-029",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-030",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-007",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 7",
+      "description": "Etapa 7 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-031",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-032",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-033",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-034",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-035",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-008",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 8",
+      "description": "Etapa 8 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-036",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-037",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-038",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-039",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-040",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-009",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 9",
+      "description": "Etapa 9 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-041",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-042",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-043",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-044",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-045",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    },
+    {
+      "id": "modulo-010",
+      "track": "alfabetizacao",
+      "name": "Módulo de Alfabetização 10",
+      "description": "Etapa 10 do programa de alfabetização",
+      "steps": [
+        {
+          "id": "passo-046",
+          "name": "Entender",
+          "description": "Compreender o conceito básico"
+        },
+        {
+          "id": "passo-047",
+          "name": "Exemplo",
+          "description": "Ver exemplos práticos"
+        },
+        {
+          "id": "passo-048",
+          "name": "Praticar",
+          "description": "Aplicar o aprendido em exercícios"
+        },
+        {
+          "id": "passo-049",
+          "name": "Verificar",
+          "description": "Comprobar o entendimento"
+        },
+        {
+          "id": "passo-050",
+          "name": "Próximo Passo",
+          "description": "Preparação para o próximo módulo"
+        }
+      ]
+    }
+  ]
+}
