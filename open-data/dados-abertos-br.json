@@ -1,0 +1,16 @@
+{
+  "tema": "Dados Abertos Brasileiros",
+  "fuentes": [
+    "Portal da Transparência",
+    "Dados.gov.br",
+    "IBGE",
+    "Banco Central"
+  ],
+  "categorias": [
+    "Finanzas públicas",
+    "Salud",
+    "Educación",
+    "Transporte"
+  ],
+  "descripcion": "Portal oficial de datos abiertos del gobierno brasileño"
+}
