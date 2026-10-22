@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: '22'
           cache: pnpm
+      - name: Verificar privacidad antes de instalar dependencias
+        run: node --test scripts/assert-no-debug-collector.test.mjs
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
       - name: Verificar currículo exportado
