@@ -81,8 +81,8 @@ válido, ids únicos, nenhuma trilha órfã).
 | Host | URL | Status |
 | --- | --- | --- |
 | Cloudflare Pages | https://aprende-brasil-5gq.pages.dev | ✅ |
-| Vercel | https://aprende-brasil-belentani7pedro-6758s-projects.vercel.app | ✅ |
-| GitHub Pages | https://belentani7.github.io/aprende-brasil/ | ✅ (rotas SPA respondem 404 + app) |
+| Vercel | https://aprende-brasil.vercel.app/ | ✅ |
+| GitHub Pages | no publicado — Pages está desactivado en repositorios privados | ❌ |
 
 O site é **100% estático**: o currículo viaja como JSON (`client/src/data/curriculum.json`)
 e o progresso/favoritos ficam no `localStorage` do navegador. Não há backend em produção.
@@ -175,20 +175,17 @@ MIT.
 ## Parte del indice educativo
 
 Esta plataforma forma parte del conjunto educativo de **Belentani / NOIACORE**:
-formacion gratuita y abierta. El indice completo, con material y estado de cada una,
-vive en el nodo central:
-
-**<https://github.com/belentani7/open-school/blob/main/INDICE-EDUCATIVO.md>**
+formacion gratuita y abierta. Estado de cada proyecto:
 
 | Plataforma | Que ensena | Enlace |
 |---|---|---|
-| Open School | Instituto digital universal | https://open-school-gamma.vercel.app |
-| ManosAbiertas | IA y ofimatica para recien llegados | https://belentani7.github.io/ManosAbiertas/ |
-| WILLIAMSCHOOL | Escuela comunitaria (curriculo Nepal) | https://williamschool.vercel.app |
+| Open School | Instituto digital universal | [repositorio](https://github.com/belentani7/open-school) — sin despliegue |
+| ManosAbiertas | IA y ofimatica para recien llegados | https://manos-abiertas-rho.vercel.app |
+| WILLIAMSCHOOL | Plataforma ESO y tutoria cultural (PT→ES→CA) | https://williamschool-livid.vercel.app |
 | UX Academy | Diseno UX/Producto, trilingue | https://ux-academy-professional.vercel.app |
 | Aprende Brasil | Educacion para Brasil | https://aprende-brasil.vercel.app/ |
-| Lingua Aberta | Idiomas, progresion CEFR | https://belentani7.github.io/lingua-aberta-empresa/ |
-| Cruzando el Charco | Acogida y arraigo | https://belentani7.github.io/Cruzando-el-charco/ |
-| secure-t | Ciberseguridad e IA | https://belentani7.github.io/secure-t/ |
+| Lingua Aberta | Idiomas, progresion CEFR | https://lingua-aberta.vercel.app/ |
+| Cruzando el Charco | Acogida y arraigo | https://cruzando-el-charco-web-20260812.vercel.app |
+| secure-t | Ciberseguridad e IA | [repositorio](https://github.com/belentani7/secure-t) — sin despliegue |
 
 **PT > ES > EN > CA.** Gratuito, accesible (WCAG) y conectado.
