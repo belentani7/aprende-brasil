@@ -30,8 +30,8 @@ def fetch_open_data():
         "descripcion": "Datos sobre la riqueza natural y científica de Brasil"
     }
     
-    with open(output_dir / "ciencia-br.json", "w", encoding="utf-8") as f:
-        json.dump(ciencia_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "ciencia-br.json").write_text(
+        json.dumps(ciencia_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     # Cultura e historia
     cultura_data = {
@@ -45,8 +45,8 @@ def fetch_open_data():
         "descripcion": "Datos sobre la cultura y historia de Brasil"
     }
     
-    with open(output_dir / "cultura-e-historia.json", "w", encoding="utf-8") as f:
-        json.dump(cultura_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "cultura-e-historia.json").write_text(
+        json.dumps(cultura_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     # Datos abiertos brasileños
     dados_data = {
@@ -66,8 +66,8 @@ def fetch_open_data():
         "descripcion": "Portal oficial de datos abiertos del gobierno brasileño"
     }
     
-    with open(output_dir / "dados-abertos-br.json", "w", encoding="utf-8") as f:
-        json.dump(dados_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "dados-abertos-br.json").write_text(
+        json.dumps(dados_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     # Lectura en portugués
     lectura_data = {
@@ -82,8 +82,8 @@ def fetch_open_data():
         "descripcion": "Recursos para mejorar la lectura y comprensión en portugués"
     }
     
-    with open(output_dir / "lectura-en-portugues.json", "w", encoding="utf-8") as f:
-        json.dump(lectura_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "lectura-en-portugues.json").write_text(
+        json.dumps(lectura_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     # Territorio y ciudadanía
     territorio_data = {
@@ -97,8 +97,8 @@ def fetch_open_data():
         "descripcion": "Información sobre la organización territorial y los derechos ciudadanos en Brasil"
     }
     
-    with open(output_dir / "territorio-e-cidadania.json", "w", encoding="utf-8") as f:
-        json.dump(territorio_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "territorio-e-cidadania.json").write_text(
+        json.dumps(territorio_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     # Vocabulario portugués
     vocabulario_data = {
@@ -113,8 +113,8 @@ def fetch_open_data():
         "descripcion": "Recursos para ampliar el vocabulario en portugués brasileño"
     }
     
-    with open(output_dir / "vocabulario-pt.json", "w", encoding="utf-8") as f:
-        json.dump(vocabulario_data, f, ensure_ascii=False, indent=2)
+    (output_dir / "vocabulario-pt.json").write_text(
+        json.dumps(vocabulario_data, ensure_ascii=False, indent=2), encoding="utf-8")
     
     print("Datos abiertos descargados y guardados en open-data/")
 

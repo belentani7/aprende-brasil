@@ -5,7 +5,7 @@ quem não teve acesso à escola e para qualquer grupo que queira se organizar co
 uma **instituição mínima** — sem matrícula, sem dados pessoais, sem publicidade.
 
 O conteúdo é gerado a partir de **bancos de dados abertos** por scripts Python,
-e a plataforma roda **standalone**: frontend React + API FastAPI + SQLite.
+e a plataforma roda **standalone**: frontend React estático — o progresso e os favoritos ficam no `localStorage` do navegador.
 
 ## O que está pronto
 
@@ -28,12 +28,12 @@ e a plataforma roda **standalone**: frontend React + API FastAPI + SQLite.
 | Experiência | React 19 + Vite + TailwindCSS 4 + shadcn/ui + wouter |
 | Dados no cliente | `client/src/data/curriculum.json` (205 módulos) + `localStorage` |
 | Conteúdo | Scripts Python: banco de palavras aberto + conteúdo curado |
-| API (opcional) | FastAPI + SQLAlchemy (Python 3.11+) — só dev/tutor com LLM |
-| Fonte | SQLite (`data/aprende.db`) |
+| API | ⚠️ o código FastAPI (`api/`) **não está neste repositório** — os scripts que o referenciam (`dev:api`, `start`) falham até ser restaurado |
+| Fonte | SQLite (`data/aprende.db`) — presente, consumido pelos scripts Python |
 
 ```
 client/     frontend React (lib/api.ts, lib/tutor.ts, data/curriculum.json)
-api/        backend FastAPI (opcional — dev e tutor com LLM)
+api/        backend FastAPI — AUSENTE do repositório (contrato em `## API`, código não commitado)
 scripts/    fetch_open_data.py, build_curriculum.py, export_curriculum.py, content_*.py
 data/       aprende.db + open/palavras-pt.txt
 functions/  Pages Function (fallback SPA da Cloudflare)
@@ -47,34 +47,32 @@ dist/public build do frontend (vite build)
 pnpm install
 pip install -r requirements.txt
 
-# 2. dados: baixa o banco aberto e gera o currículo
-pnpm seed            # = python -m scripts.fetch_open_data && python -m scripts.build_curriculum
-python -m scripts.export_curriculum  # atualiza o JSON estático versionado para Vercel/Pages
+# 2. dados
+# ⚠️ NÃO rode `pnpm seed` neste repositório: ele regenera um esqueleto de 10 módulos
+#    e SOBRESCREVE o currículo curado de 205 módulos (client/src/data/curriculum.json).
+python -m scripts.export_curriculum  # exporta o currículo do SQLite para o JSON estático
 
-# 3. desenvolvimento (duas terminais)
-pnpm dev             # Vite em :5173 (proxy /api -> :8000)
-pnpm dev:api         # FastAPI em :8000
+# 3. desenvolvimento
+pnpm dev             # Vite em :5173 (o site funciona 100% estático, sem API)
+# pnpm dev:api       # NÃO DISPONÍVEL: api/ não está no repositório
 
-# 4. produção (um só serviço: FastAPI serve o SPA compilado)
+# 4. build de produção (estático)
 pnpm build           # gera dist/public
-pnpm start           # uvicorn em :8000 servindo dist/public
+# pnpm start         # NÃO DISPONÍVEL: depende de api/
 ```
 
 ## Testes
 
-Suíte Python (pytest) que valida a API endpoint a endpoint e a integridade do
-currículo em `data/aprende.db`:
+Testes reais no repositório (JavaScript):
 
 ```bash
-pip install -r requirements-dev.txt
-pnpm test:py          # = python -m pytest
+pnpm test             # vitest
+pnpm test:privacy     # garante que nenhum coletor de dados entra no build
 ```
 
-Cobre: health, trilhas, catálogo (paginação, busca, filtro por trilha),
-módulo + etapas ordenadas, 404 de módulo inexistente, tutor (fallback local),
-progresso (monotônico), estatísticas e favoritos — mais 6 checagens de dados
-(205 módulos, 1025 etapas, 5 etapas na ordem certa por módulo, `content_json`
-válido, ids únicos, nenhuma trilha órfã).
+O projeto também tem uma suíte pytest planejada (health, trilhas, catálogo,
+progresso, favoritos e 6 checagens de dados do currículo), mas ela valida a API
+FastAPI e `pnpm test:py` falha enquanto `api/` não estiver no repositório.
 
 ## Ao vivo
 
@@ -90,8 +88,9 @@ e o progresso/favoritos ficam no `localStorage` do navegador. Não há backend e
 ## API
 
 A plataforma **não precisa de servidor**: `client/src/lib/api.ts` lê o JSON local e o
-`localStorage`. O FastAPI (`api/`) segue disponível para uso local/dev e para servir o
-tutor com LLM — basta definir `VITE_API_URL` no build para o cliente preferir o backend.
+`localStorage`. A tabela abaixo é o contrato de rotas desenhado para o backend FastAPI
+(com tutor LLM); o código dele não está neste repositório — defina `VITE_API_URL` no
+build apenas quando ele existir e estiver no ar.
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
@@ -123,14 +122,17 @@ LLM_MODEL=gpt-4o-mini
 
 ## Bancos de dados abertos
 
-- **Lista de palavras do português** — [pythonprobr/palavras](https://github.com/pythonprobr/palavras) (MIT),
-  baixada e normalizada por `scripts/fetch_open_data.py` em `data/open/palavras-pt.txt`.
-- O currículo é construído por `scripts/build_curriculum.py` a partir dessa base
-  e de listas curadas (informática, matemática, idiomas).
-- O JSON do navegador é gerado de `data/aprende.db` com Python padrão. CI executa
-  `python -m scripts.export_curriculum --check` para detectar dados desatualizados.
+- **Lista de palavras do português** — baseada em [pythonprobr/palavras](https://github.com/pythonprobr/palavras) (MIT).
+  `data/open/palavras-pt.txt` está commitado no repositório; hoje **nenhum script baixa** essa lista automaticamente.
+- `scripts/fetch_open_data.py` grava JSONs de demonstração em `open-data/` (temas de
+  ciência, cultura, vocabulário…). O frontend não consome esse diretório — é material de referência.
+- O currículo curado (205 módulos) vive em `client/src/data/curriculum.json` e em
+  `data/aprende.db`. `pnpm seed`/`build_curriculum.py` geram apenas um **esqueleto de teste**
+  (10 módulos placeholder) — não usem para restaurar o currículo real.
+- O JSON do navegador pode ser reexportado de `data/aprende.db` com
+  `python -m scripts.export_curriculum`. CI executa `--check` para detectar dados desatualizados.
 
-Os scripts usam **apenas a biblioteca padrão** para o download.
+Os scripts usam **apenas a biblioteca padrão** do Python.
 
 ## Deploy
 
@@ -175,7 +177,8 @@ MIT.
 ## Parte del indice educativo
 
 Esta plataforma forma parte del conjunto educativo de **Belentani / NOIACORE**:
-formacion gratuita y abierta. Estado de cada proyecto:
+formacion gratuita y abierta. El mapa verificado del conjunto vive en este
+repositorio: [`UNIVERSO-EDUCATIVO.md`](UNIVERSO-EDUCATIVO.md).
 
 | Plataforma | Que ensena | Enlace |
 |---|---|---|
@@ -186,6 +189,6 @@ formacion gratuita y abierta. Estado de cada proyecto:
 | Aprende Brasil | Educacion para Brasil | https://aprende-brasil.vercel.app/ |
 | Lingua Aberta | Idiomas, progresion CEFR | https://lingua-aberta.vercel.app/ |
 | Cruzando el Charco | Acogida y arraigo | https://cruzando-el-charco-web-20260812.vercel.app |
-| secure-t | Ciberseguridad e IA | [repositorio](https://github.com/belentani7/secure-t) — sin despliegue |
+| secure-t | Ciberseguridad e IA | [repositorio](https://github.com/belentani7/secure-t) — sin despliegue (repo archivado) |
 
 **PT > ES > EN > CA.** Gratuito, accesible (WCAG) y conectado.

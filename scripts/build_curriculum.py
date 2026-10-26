@@ -86,8 +86,8 @@ def build_curriculum():
         module_id += 1
     
     # Guardar el currículo
-    with open(output_dir / "curriculum.json", "w", encoding="utf-8") as f:
-        json.dump(curriculum, f, ensure_ascii=False, indent=2)
+    (output_dir / "curriculum.json").write_text(
+        json.dumps(curriculum, ensure_ascii=False, indent=2), encoding="utf-8")
     
     print(f"Currículo generado con {len(curriculum['tracks'])} tracks y {len(curriculum['modules'])} módulos")
     print(f"Total de pasos: {sum(len(module['steps']) for module in curriculum['modules'])}")
