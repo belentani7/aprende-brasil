@@ -35,9 +35,9 @@ jobs:
         run: python -m scripts.export_curriculum --check
       - name: Lint
         run: pnpm run --if-present lint
-      - name: Typecheck
-        run: pnpm run --if-present typecheck
+      - name: Typecheck (required)
+        run: pnpm check
       - name: Tests
         run: pnpm test
-      - name: Build
-        run: pnpm run --if-present build
+      - name: Build (required)
+        run: pnpm build
