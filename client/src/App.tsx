@@ -1,3 +1,4 @@
+import HeroShader from './components/HeroShader';
 import { useEffect, useMemo, useState } from "react";
 import { Link, Route, Switch, useLocation, useRoute } from "wouter";
 import curriculum from "./data/curriculum.json";
