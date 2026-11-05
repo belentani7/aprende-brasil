@@ -3,8 +3,8 @@
 build_curriculum.py — genera el currículo estructurado a partir de los datos abiertos.
 """
 import json
-import os
 from pathlib import Path
+
 
 def build_curriculum():
     """Construye el currículo estructurado para Aprende Brasil."""

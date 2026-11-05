@@ -3,9 +3,8 @@
 fetch_open_data.py — descarga bancos de datos abiertos y los prepara para el currículo.
 """
 import json
-import os
-import urllib.request
 from pathlib import Path
+
 
 def fetch_open_data():
     """Descarga y procesa datos abiertos para el currículo."""

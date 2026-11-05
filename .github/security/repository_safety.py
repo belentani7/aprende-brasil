@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Offline, dependency-free CI safety guard. Never print credential values."""
 from __future__ import annotations
+
 import re
 import subprocess
 import sys
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2]
 names=subprocess.check_output(["git","ls-files","-z"],cwd=ROOT).decode("utf-8","replace").split("\0")
 issues=[]
-sensitive=re.compile(r"(^|/)(\.env($|\.(?!example$|sample$|template$|test$))|id_rsa$|id_ed25519$|.*\.pem$|.*\.p12$|.*\.pfx$|.*\.key$|.*\.keystore$)",re.I)
+sensitive=re.compile(r"(^|/)(\.env($|\.(?!example$|sample$|template$|test$))|id_rsa$|id_ed25519$|.*\.pem$|.*\.p12$|.*\.pfx$|.*\.key$|.*\.keystore$)",re.IGNORECASE)
 patterns=[
  re.compile("ghp_"+r"[A-Za-z0-9]{36}"),
  re.compile("github_pat_"+r"[A-Za-z0-9_]{52}"),
