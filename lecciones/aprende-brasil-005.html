@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprende Brasil · Aprende Brasil · Educação aberta</title>
+<meta name="description" content="Aprende Brasil — material real de Aprende Brasil · Educação aberta">
+<style>
+:root{color-scheme:dark;--bg:#0c1409;--bg2:#121c10;--ink:#f2f7ec;--acc:#7fb069;--acc2:#e6a532;--line:#ffffff1f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,"Segoe UI",Inter,system-ui,sans-serif;line-height:1.68}
+.wrap{max-width:78ch;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+.skip{position:absolute;left:-9999px;top:0;background:var(--acc);color:#111;padding:10px 16px;z-index:9}
+.skip:focus{left:12px;top:12px}
+header.site{border-bottom:1px solid var(--line);padding:20px 0;display:flex;gap:16px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:-.02em}
+.brand span{color:var(--acc2)}
+nav.site{display:flex;gap:16px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+nav.site a{color:var(--acc2);text-decoration:none}
+nav.site a:hover,nav.site a[aria-current=page]{color:var(--ink)}
+main{padding:clamp(40px,8vh,90px) 0}
+.eyebrow{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.04;letter-spacing:-.03em;margin:0 0 26px;font-weight:600;text-wrap:balance}
+h2{font-size:clamp(1.3rem,2.6vw,1.8rem);line-height:1.2;margin:2.2em 0 .7em;font-weight:600}
+h3{font-size:1.15rem;margin:1.8em 0 .5em}
+p,li{max-width:68ch}
+a{color:var(--acc)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--acc2);outline-offset:4px;border-radius:4px}
+code{background:#ffffff12;padding:.15em .4em;border-radius:4px;font-size:.92em}
+table{border-collapse:collapse;width:100%;margin:1.4em 0;font-size:.94rem}
+th,td{border:1px solid var(--line);padding:.55em .7em;text-align:left;vertical-align:top}
+th{background:var(--bg2)}
+footer.site{border-top:1px solid var(--line);padding:26px 0 46px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--acc2)}
+footer.site a{color:var(--acc)}
+@media print{body{background:#fff;color:#111}header.site,footer.site{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="site"><div class="wrap" style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:12px">
+<span class="brand">Aprende Brasil · Educação aberta <span>· 299 páginas</span></span>
+<nav class="site" aria-label="Navegación"><a href="index.html">Índice</a></nav>
+</div></header>
+<main id="contenido"><div class="wrap">
+<p class="eyebrow">Lección</p>
+<h1>Aprende Brasil</h1>
+<p class="eyebrow">Lección 6 de 9</p><h1>Aprende Brasil</h1>
+<p>Plataforma de <strong>alfabetização e educação aberta</strong> em português brasileiro, para</p>
+<p>quem não teve acesso à escola e para qualquer grupo que queira se organizar como</p>
+<p>uma <strong>instituição mínima</strong> — sem matrícula, sem dados pessoais, sem publicidade.</p>
+<p>O conteúdo é gerado a partir de <strong>bancos de dados abertos</strong> por scripts Python,</p>
+<p>e a plataforma roda <strong>standalone</strong>: frontend React estático — o progresso e os favoritos ficam no <code>localStorage</code> do navegador.</p>
+<h2>O que está pronto</h2>
+<ul>
+<li><strong>205 módulos</strong> com 5 etapas pedagógicas cada (entender → exemplo → praticar →</li>
+</ul>
+<p>verificar → próximo passo): 93 de Alfabetização, 40 de Informática, 40 de</p>
+<p>Matemática e 32 de Idiomas.</p>
+<ul>
+<li><strong>Trilha de Alfabetização real</strong>: letras, famílias silábicas, temas de</li>
+</ul>
+<p>vocabulário, frases e textos do dia a dia (conta de luz, bula, formulário…).</p>
+<ul>
+<li><strong>Dashboard</strong> do estudante: trilhas, catálogo com busca, módulos em destaque,</li>
+</ul>
+<p>agenda e tutor.</p>
+<ul>
+<li><strong>Vista de leção</strong> (<code>/modulo/:id</code>): passo a passo, progresso salvo, favoritos</li>
+</ul>
+<p>e leitura em voz alta (pt-BR) no navegador.</p>
+<ul>
+<li><strong>Tutor Nilo</strong> com LLM opcional (OpenAI-compatível) e fallback local offline.</li>
+<li><strong>API de progresso e favoritos</strong> por usuário.</li>
+</ul>
+<h2>Arquitetura</h2>
+<table><thead><tr><th>Camada</th><th>Tecnologia</th></tr></thead><tbody>
+<tr><td>Experiência</td><td>React 19 + Vite + TailwindCSS 4 + shadcn/ui + wouter</td></tr>
+<tr><td>Dados no cliente</td><td>`client/src/data/curriculum.json` (205 módulos) + `localStorage`</td></tr>
+<tr><td>Conteúdo</td><td>Scripts Python: banco de palavras aberto + conteúdo curado</td></tr>
+<tr><td>API</td><td>⚠️ o código FastAPI (`api/`) **não está neste repositório** — os scripts que o referenciam (`dev:api`, `start`) falham até ser restaurado</td></tr>
+<tr><td>Fonte</td><td>SQLite (`data/aprende.db`) — presente, consumido pelos scripts Python</td></tr>
+</tbody></table>
+<p>```</p>
+<p>client/     frontend React (lib/api.ts, lib/tutor.ts, data/curriculum.json)</p>
+<p>api/        backend FastAPI — AUSENTE do repositório (contrato em <code>## API</code>, código não commitado)</p>
+<p>scripts/    fetch_open_data.py, build_curriculum.py, export_curriculum.py, content_*.py</p>
+<p>data/       aprende.db + open/palavras-pt.txt</p>
+<p>functions/  Pages Function (fallback SPA da Cloudflare)</p>
+<p>dist/public build do frontend (vite build)</p>
+<p>```</p>
+<h2>Rodar</h2>
+<p>```bash</p>
+<h1>1. dependências</h1>
+<p>pnpm install</p>
+<p>pip install -r requirements.txt</p>
+<h1>2. dados</h1>
+<h1>⚠️ NÃO rode <code>pnpm seed</code> neste repositório: ele regenera um esqueleto de 10 módulos</h1>
+<h1>e SOBRESCREVE o currículo curado de 205 módulos (client/src/data/curriculum.json).</h1>
+<p>python -m scripts.export_curriculum  # exporta o currículo do SQLite para o JSON estático</p>
+<h1>3. desenvolvimento</h1>
+<p>pnpm dev             # Vite em :5173 (o site funciona 100% estático, sem API)</p>
+<h1>pnpm dev:api       # NÃO DISPONÍVEL: api/ não está no repositório</h1>
+<h1>4. build de produção (estático)</h1>
+<p>pnpm build           # gera dist/public</p>
+<h1>pnpm start         # NÃO DISPONÍVEL: depende de api/</h1>
+<p>```</p>
+<h2>Testes</h2>
+<p>Testes reais no repositório (JavaScript):</p>
+<p>```bash</p>
+<p>pnpm test             # vitest</p>
+<p>pnpm test:privacy     # garante que nenhum coletor de dados entra no build</p>
+<p>```</p>
+<p>O projeto também tem uma suíte pytest planejada (health, trilhas, catálogo,</p>
+<p>progresso, favoritos e 6 checagens de dados do currículo), mas ela valida a API</p>
+<p>FastAPI e <code>pnpm test:py</code> falha enquanto <code>api/</code> não estiver no repositório.</p>
+<h2>Ao vivo</h2>
+<table><thead><tr><th>Host</th><th>URL</th><th>Status</th></tr></thead><tbody>
+<tr><td>Cloudflare Pages</td><td>https://aprende-brasil-5gq.pages.dev</td><td>✅</td></tr>
+<tr><td>Vercel</td><td>https://aprende-brasil.vercel.app/</td><td>✅</td></tr>
+<tr><td>GitHub Pages</td><td>no publicado — Pages está desactivado en repositorios privados</td><td>❌</td></tr>
+</tbody></table>
+<p>O site é <strong>100% estático</strong>: o currículo viaja como JSON (<code>client/src/data/curriculum.json</code>)</p>
+<p>e o progresso/favoritos ficam no <code>localStorage</code> do navegador. Não há backend em produção.</p>
+<h2>API</h2>
+<p>A plataforma <strong>não precisa de servidor</strong>: <code>client/src/lib/api.ts</code> lê o JSON local e o</p>
+<p><code>localStorage</code>. A tabela abaixo é o contrato de rotas desenhado para o backend FastAPI</p>
+<p>(com tutor LLM); o código dele não está neste repositório — defina <code>VITE_API_URL</code> no</p>
+<p>build apenas quando ele existir e estiver no ar.</p>
+<table><thead><tr><th>Método</th><th>Rota</th><th>Descrição</th></tr></thead><tbody>
+<tr><td>`GET`</td><td>`/api/health`</td><td>status</td></tr>
+<tr><td>`GET`</td><td>`/api/tracks`</td><td>trilhas + contagem de módulos</td></tr>
+<tr><td>`GET`</td><td>`/api/modules?track=&search=&page=`</td><td>catálogo paginado</td></tr>
+<tr><td>`GET`</td><td>`/api/modules/featured`</td><td>destaques</td></tr>
+<tr><td>`GET`</td><td>`/api/modules/{id}`</td><td>módulo + etapas</td></tr>
+<tr><td>`POST`</td><td>`/api/tutor/ask`</td><td>tutor Nilo</td></tr>
+<tr><td>`GET`/`POST`</td><td>`/api/progress`</td><td>progresso por módulo</td></tr>
+<tr><td>`GET`/`POST`</td><td>`/api/favorites`</td><td>favoritos (toggle)</td></tr>
+<tr><td>`GET`</td><td>`/api/stats`</td><td>resumo do usuário</td></tr>
+</tbody></table>
+<h2>Tutor Nilo (offline)</h2>
+<p>Sem backend, o tutor responde com um motor local em <code>client/src/lib/tutor.ts</code>: ele</p>
+<p>detecta a intenção da pergunta, busca no currículo os módulos mais relevantes e compõe</p>
+<p>uma resposta ampla — conceito, exemplo concreto, prática, verificação e próximo passo —</p>
+<p>sempre citando conteúdo real dos 205 módulos.</p>
+<p>Para usar um LLM, defina as variáveis no backend e aponte o cliente para ele:</p>
+<p>```</p>
+<p>VITE_API_URL=https://seu-backend        # build do cliente</p>
+<p>LLM_API_URL=https://api.exemplo.com/v1/chat/completions</p>
+<p>LLM_API_KEY=...</p>
+<p>LLM_MODEL=gpt-4o-mini</p>
+<p>```</p>
+<h2>Bancos de dados abertos</h2>
+<ul>
+<li><strong>Lista de palavras do português</strong> — baseada em [pythonprobr/palavras](https://github.com/pythonprobr/palavras) (MIT).</li>
+</ul>
+<p><code>data/open/palavras-pt.txt</code> está commitado no repositório; hoje <strong>nenhum script baixa</strong> essa lista automaticamente.</p>
+<ul>
+<li><code>scripts/fetch_open_data.py</code> grava JSONs de demonstração em <code>open-data/</code> (temas de</li>
+</ul>
+<p>ciência, cultura, vocabulário…). O frontend não consome esse diretório — é material de referência.</p>
+<ul>
+<li>O currículo curado (205 módulos) vive em <code>client/src/data/curriculum.json</code> e em</li>
+</ul>
+<p><code>data/aprende.db</code>. <code>pnpm seed</code>/<code>build_curriculum.py</code> geram apenas um <strong>esqueleto de teste</strong></p>
+<p>(10 módulos placeholder) — não usem para restaurar o currículo real.</p>
+<ul>
+<li>O JSON do navegador pode ser reexportado de <code>data/aprende.db</code> com</li>
+</ul>
+<p><code>python -m scripts.export_curriculum</code>. CI executa <code>--check</code> para detectar dados desatualizados.</p>
+<p>Os scripts usam <strong>apenas a biblioteca padrão</strong> do Python.</p>
+<h2>Deploy</h2>
+<p>Tudo é estático, então qualquer CDN serve. O que cada host precisa:</p>
+<table><thead><tr><th>Host</th><th>Comando</th><th>Fallback SPA</th></tr></thead><tbody>
+<tr><td>Cloudflare Pages</td><td>`wrangler pages deploy dist/public --project-name aprende-brasil`</td><td>`functions/[[path]].js`</td></tr>
+<tr><td>Vercel</td><td>`vercel deploy --prod`</td><td>`rewrites` em `vercel.json`</td></tr>
+<tr><td>Netlify</td><td>`netlify deploy --prod --dir=dist/public`</td><td>`netlify.toml`</td></tr>
+<tr><td>GitHub Pages</td><td>publicar `dist/public` na branch `gh-pages`</td><td>`404.html` + `.nojekyll`</td></tr>
+</tbody></table>
+<p>Notas de campo (custaram tempo, ficam registradas):</p>
+<ul>
+<li><strong>Vercel</strong>: <code>requirements.txt</code> na raiz faz a Vercel tentar compilar <code>pydantic-core</code></li>
+</ul>
+<p>e o build morre. Por isso existe <code>.vercelignore</code> — as regras são ancoradas em <code>/</code></p>
+<p>(<code>/data/</code>, não <code>data/</code>), senão <code>client/src/data/curriculum.json</code> também é excluído.</p>
+<ul>
+<li><strong>Cloudflare Pages</strong>: <code>_redirects</code> tem prioridade <strong>sobre</strong> os assets estáticos, e um</li>
+</ul>
+<p>catch-all <code>/*</code> serve <code>/assets/*.js</code> como <code>text/html</code>. Por isso o fallback é uma</p>
+<p>Pages Function, que só cai no <code>index.html</code> quando o asset realmente não existe.</p>
+<ul>
+<li><strong>GitHub Pages</strong>: serve em subpath, então o build precisa de <code>--base=/aprende-brasil/</code></li>
+</ul>
+<p><strong>e</strong> o <code>WouterRouter</code> precisa de <code>base</code> (em <code>client/src/App.tsx</code>), senão as rotas</p>
+<p>caem no NotFound. Como Pages não tem rewrites, o fallback é o <code>404.html</code> — as rotas</p>
+<p>SPA respondem com status 404 mas entregam a app e funcionam.</p>
+<ul>
+<li><strong>Deployment Protection</strong> na Vercel bloqueia o site público (302 para SSO). Desative</li>
+</ul>
+<p>com <code>ssoProtection: null</code> via API do projeto.</p>
+<h2>Próximos passos</h2>
+<ul>
+<li>Exercícios com correção automática (hoje o "check" é autoavaliação).</li>
+<li>Importador de módulos versionado + revisão editorial.</li>
+<li>Perfis de docente/editor, metas e agenda persistidas.</li>
+<li>Voz (OpenVoice/TTS) atrás de um adaptador server-side.</li>
+<li>Revisão WCAG 2.2 AA com usuários reais.</li>
+</ul>
+<h2>Licença</h2>
+<p>MIT.</p>
+<p>---</p>
+<h2>Parte del indice educativo</h2>
+<p>Esta plataforma forma parte del conjunto educativo de <strong>Belentani / NOIACORE</strong>:</p>
+<p>formacion gratuita y abierta. El mapa verificado del conjunto vive en este</p>
+<p>repositorio: [<code>UNIVERSO-EDUCATIVO.md</code>](UNIVERSO-EDUCATIVO.md).</p>
+<table><thead><tr><th>Plataforma</th><th>Que ensena</th><th>Enlace</th></tr></thead><tbody>
+<tr><td>Open School</td><td>Instituto digital universal</td><td>[repositorio](https://github.com/belentani7/open-school) — sin despliegue</td></tr>
+<tr><td>ManosAbiertas</td><td>IA y ofimatica para recien llegados</td><td>https://manos-abiertas-rho.vercel.app</td></tr>
+<tr><td>WILLIAMSCHOOL</td><td>Plataforma ESO y tutoria cultural (PT→ES→CA)</td><td>https://williamschool-livid.vercel.app</td></tr>
+<tr><td>UX Academy</td><td>Diseno UX/Producto, trilingue</td><td>https://ux-academy-professional.vercel.app</td></tr>
+<tr><td>Aprende Brasil</td><td>Educacion para Brasil</td><td>https://aprende-brasil.vercel.app/</td></tr>
+<tr><td>Lingua Aberta</td><td>Idiomas, progresion CEFR</td><td>https://lingua-aberta.vercel.app/</td></tr>
+<tr><td>Cruzando el Charco</td><td>Acogida y arraigo</td><td>https://cruzando-el-charco-web-20260812.vercel.app</td></tr>
+<tr><td>secure-t</td><td>Ciberseguridad e IA</td><td>[repositorio](https://github.com/belentani7/secure-t) — sin despliegue (repo archivado)</td></tr>
+</tbody></table>
+<p><strong>PT &gt; ES &gt; EN &gt; CA.</strong> Gratuito, accesible (WCAG) y conectado.</p><p style="margin-top:2.5em"><small>Fuente: <code>README.md</code></small></p>
+<nav class="pager" aria-label="Paginación" style="display:flex;justify-content:space-between;gap:16px;margin-top:56px;padding-top:22px;border-top:1px solid var(--line);font-size:.9rem">
+<a rel="prev" href="prompt-maestro-aprende-brasil-004.html">← Prompt maestro — Aprende Brasil</a><a rel="next" href="aprende-brasil-006.html">aprende-brasil →</a>
+</nav>
+</div></main>
+<footer class="site"><div class="wrap" style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:10px">
+<span>Contenido derivado de los materiales fuente del repositorio.</span>
+<a href="index.html">Volver al índice</a>
+</div></footer>
+</body>
+</html>
