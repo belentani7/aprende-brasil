@@ -189,3 +189,11 @@ vive en el nodo central:
 | secure-t | Ciberseguridad e IA | https://belentani7.github.io/secure-t/ |
 
 **PT > ES > EN > CA.** Gratuito, accesible (WCAG) y conectado.
+
+## Recuperação web-first em 2026-11-23: currículo necessário no build
+
+O snapshot histórico contém `data/aprende.db` com **205 módulos, 1.025 etapas e 4 trilhas**, mas **não contém** `client/src/data/curriculum.json` usado pelo frontend. Sem gerar esse arquivo, `vite build` falha ao resolver o import estático do campus. A recuperação incluiu `scripts/export_static_curriculum.py`: exportador **sem dependências externas**, usando apenas `sqlite3` da biblioteca padrão de Python 3. Lê o banco em modo somente leitura, exige contagens exatas e conteúdo não vazio e cria o JSON na pasta consumida por Vite. `prebuild`, `precheck` e `pretest` são executados pelo npm; `vercel.json` agora usa `npm run build` em vez de `vite build` para não ignorar o passo de geração.
+
+No snapshot extraído em ambiente isolado, executou-se o exportador original SQLAlchemy e a versão padrão SQLite: **os JSON resultantes são estruturalmente idênticos** (`4 trilhas / 205 módulos / 1025 etapas`, 212.308 bytes). Isso não significa que o bundle Vite ou o deploy Vercel tenha passado. A conexão Vercel atual retorna 403 ao criar projetos; nada foi publicado. Requer Python 3 instalado no ambiente de compilação, `npm run build` e testes em navegador antes da entrega de produção.
+
+A restauração está em um PR rascunho; `main` e histórico antigo permanecem intactos.
