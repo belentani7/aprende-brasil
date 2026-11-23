@@ -13,7 +13,10 @@
     "test:watch": "vitest",
     "test:py": "python -m pytest",
     "test:all": "npm run check && npm run test && npm run build",
-    "seed": "python -m scripts.fetch_open_data && python -m scripts.build_curriculum"
+    "seed": "python -m scripts.fetch_open_data && python -m scripts.build_curriculum",
+    "prebuild": "python3 scripts/export_static_curriculum.py",
+    "precheck": "python3 scripts/export_static_curriculum.py",
+    "pretest": "python3 scripts/export_static_curriculum.py"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
