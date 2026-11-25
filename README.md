@@ -105,18 +105,18 @@ npm run dev:api        # FastAPI em http://localhost:8000 (tutor com LLM)
 
 ## Scripts
 
-| Comando                    | O que faz                                                      |
-| -------------------------- | -------------------------------------------------------------- |
-| `npm run dev`              | Vite com recarregamento; gera o currículo antes                |
-| `npm run build`            | Exporta o currículo, compila e cria o `404.html`               |
-| `npm run check`            | Typecheck (`tsc --noEmit`)                                     |
-| `npm test`                 | Vitest (52 testes: dados, tutor, progresso, componentes, a11y) |
-| `npm run test:py`          | pytest (42 testes: API, dados, exportação, conteúdo)           |
-| `npm run verify`           | check + testes + build + orçamento                             |
-| `npm run audit`            | Valida o contrato dos dados e o orçamento de bundle            |
-| `npm run stats`            | Números do currículo por trilha e tipo de etapa                |
-| `npm run curriculum:check` | Falha se os JSON não baterem com o SQLite                      |
-| `npm run format`           | Prettier em todo o projeto                                     |
+| Comando                    | O que faz                                                       |
+| -------------------------- | --------------------------------------------------------------- |
+| `npm run dev`              | Vite com recarregamento; gera o currículo antes                 |
+| `npm run build`            | Exporta o currículo, compila e cria o `404.html`                |
+| `npm run check`            | Typecheck (`tsc --noEmit`)                                      |
+| `npm test`                 | Vitest (52 testes: dados, tutor, progresso, componentes, a11y)  |
+| `npm run test:py`          | pytest (47 testes: API, dados, exportação, conteúdo, segurança) |
+| `npm run verify`           | check + testes + build + orçamento                              |
+| `npm run audit`            | Valida o contrato dos dados e o orçamento de bundle             |
+| `npm run stats`            | Números do currículo por trilha e tipo de etapa                 |
+| `npm run curriculum:check` | Falha se os JSON não baterem com o SQLite                       |
+| `npm run format`           | Prettier em todo o projeto                                      |
 
 ### CLI interna
 
@@ -150,7 +150,9 @@ justificativa no PR.
 - 205 módulos, 1.025 etapas, 5 etapas na ordem e ids únicos;
 - JSON exportado idêntico ao banco, inclusive os textos;
 - qualidade editorial: sem placeholders, palavras curadas em cada módulo de
-  letra/família/tema e exemplos reais nos textos do dia a dia.
+  letra/família/tema e exemplos reais nos textos do dia a dia;
+- segurança do servidor de SPA: bloqueia `../`, caminhos absolutos e symlinks
+  que apontem para fora de `dist/public`.
 
 ## Deploy
 
@@ -218,7 +220,7 @@ Medido neste repositório com `npm run build && npm run audit`:
 | JS inicial          | ≈106 KiB gzip              |
 | CSS                 | ≈10,4 KiB gzip             |
 | Bundle total (dist) | ≈803 KiB em disco          |
-| Testes              | 52 Vitest + 42 pytest (94) |
+| Testes              | 52 Vitest + 47 pytest (99) |
 | Typecheck           | limpo (`strict: true`)     |
 
 Lighthouse não é executado no CI porque o runner não traz um Chrome

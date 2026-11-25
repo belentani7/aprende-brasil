@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import os
+from fastapi.staticfiles import StaticFiles
 
 from .database import engine, Base
 from .routes import tracks, modules, tutor, progress
@@ -30,13 +31,36 @@ def health():
 
 
 # Serve React frontend in production (Vite output: dist/public)
-CLIENT_DIST = os.path.join(os.path.dirname(__file__), "..", "dist", "public")
-if os.path.isdir(CLIENT_DIST):
-    app.mount("/assets", StaticFiles(directory=os.path.join(CLIENT_DIST, "assets")), name="assets")
+CLIENT_DIST = Path(__file__).resolve().parent.parent / "dist" / "public"
 
-    @app.get("/{full_path:path}")
+
+def safe_static_path(root: Path, requested: str) -> Path | None:
+    """Resolve um arquivo pedido pelo cliente sem sair da pasta pública.
+
+    O caminho da URL é dado por quem chama o servidor; concatenar direto abriria
+    leitura arbitrária (``/../api/main.py``, ``/../../etc/passwd``). Aqui o
+    caminho é resolvido e só é aceito se continuar dentro de ``root``.
+    """
+    try:
+        candidate = (root / requested.lstrip("/")).resolve()
+    except (OSError, ValueError):
+        return None
+    if not candidate.is_relative_to(root.resolve()):
+        return None
+    return candidate if candidate.is_file() else None
+
+
+if CLIENT_DIST.is_dir():
+    assets = CLIENT_DIST / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
-        file_path = os.path.join(CLIENT_DIST, full_path)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse(os.path.join(CLIENT_DIST, "index.html"))
+        static_file = safe_static_path(CLIENT_DIST, full_path)
+        if static_file is not None:
+            return FileResponse(static_file)
+        index = CLIENT_DIST / "index.html"
+        if not index.is_file():
+            raise HTTPException(status_code=404, detail="Frontend não compilado")
+        return FileResponse(index)

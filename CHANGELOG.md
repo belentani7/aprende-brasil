@@ -40,11 +40,13 @@
 - Página 404 traduzida e integrada ao produto.
 - Atividade semanal real no painel, no lugar de números fixos.
 - CI passou a executar typecheck, testes, build e orçamento; CodeQL corrigido.
+- Path traversal no servidor de SPA (`/{full_path}` servia qualquer arquivo do
+  disco); agora só entrega arquivos dentro de `dist/public`.
 
 ### Adicionado
 
 - CLI `tools/aprende.mjs` (`stats`, `validate`, `budget`, `--help`).
-- 44 testes novos: 52 Vitest (inclui axe-core) + 42 pytest.
+- 54 testes novos: 52 Vitest (inclui axe-core) + 47 pytest.
 - `scripts/run-python.mjs` e `scripts/build-curriculum.mjs` para builds
   reproduzíveis com ou sem Python.
 - Exportação determinística com modo `--check` para o CI.
