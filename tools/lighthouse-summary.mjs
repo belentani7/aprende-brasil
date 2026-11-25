@@ -14,11 +14,15 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = process.argv.includes("--saida")
-  ? process.argv[process.argv.indexOf("--saida") - 1] || "lighthouse-results"
-  : process.argv[2] || "lighthouse-results";
-const saidaIndex = process.argv.indexOf("--saida");
-const saida = saidaIndex === -1 ? null : process.argv[saidaIndex + 1];
+// Argumentos: [pastas...] [--saida arquivo.md]
+const argumentos = process.argv.slice(2);
+const saidaIndex = argumentos.indexOf("--saida");
+const saida = saidaIndex === -1 ? null : argumentos[saidaIndex + 1];
+// Sem `--saida`, o índice do valor não existe; `-1` evita filtrar o argumento 0.
+const indiceValorSaida = saidaIndex === -1 ? -1 : saidaIndex + 1;
+const pastas = argumentos.filter(
+  (arg, i) => !arg.startsWith("--") && i !== indiceValorSaida
+);
 
 const CATEGORIAS = [
   ["performance", "Performance"],
@@ -59,9 +63,16 @@ function relatorios(pasta) {
     .map(caminho => JSON.parse(readFileSync(caminho, "utf8")));
 }
 
-const lhrs = relatorios(dir);
+// Sem pasta informada, procura onde o Lighthouse CI escreve por padrão e onde
+// o workflow pede para escrever. Pastas inexistentes são ignoradas.
+const procurar = pastas.length
+  ? pastas
+  : [".lighthouseci", "lighthouse-results"];
+const lhrs = procurar.flatMap(relatorios);
 if (!lhrs.length) {
-  console.error(`Nenhum relatório do Lighthouse em ${dir}/ — nada a resumir.`);
+  console.error(
+    `Nenhum relatório do Lighthouse em ${procurar.join(", ")} — nada a resumir.`
+  );
   process.exit(1);
 }
 

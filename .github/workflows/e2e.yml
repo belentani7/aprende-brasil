@@ -77,11 +77,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if node tools/lighthouse-summary.mjs lighthouse-results --saida /tmp/lighthouse.md; then
-            gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/lighthouse.md
-          else
-            echo "Sem relatórios do Lighthouse para resumir." >&2
-          fi
+          # O Lighthouse CI pode escrever em .lighthouseci/ ou em
+          # lighthouse-results/; o script procura nos dois. Se não achar nada, o
+          # passo falha — silêncio aqui significaria "números escondidos".
+          node tools/lighthouse-summary.mjs .lighthouseci lighthouse-results \
+            --saida /tmp/lighthouse.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/lighthouse.md
 
       - name: Guardar relatórios
         if: always()
