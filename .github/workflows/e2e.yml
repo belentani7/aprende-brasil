@@ -72,12 +72,24 @@ jobs:
           } > /tmp/comentario.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comentario.md
 
-      - name: Guardar relatório
+      - name: Resumir Lighthouse no PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if node tools/lighthouse-summary.mjs lighthouse-results --saida /tmp/lighthouse.md; then
+            gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/lighthouse.md
+          else
+            echo "Sem relatórios do Lighthouse para resumir." >&2
+          fi
+
+      - name: Guardar relatórios
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: relatorios
           path: |
             playwright-report
             test-results
+            lighthouse-results
           retention-days: 7

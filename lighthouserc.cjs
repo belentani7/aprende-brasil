@@ -59,8 +59,10 @@ module.exports = {
       },
     },
     upload: {
-      // Só sobe para o storage temporário público do LHCI; nada de token secreto.
-      target: "temporary-public-storage",
+      // Relatórios ficam no workspace do runner: servem ao artifact do workflow
+      // e ao resumo publicado no PR. Se um dia houver storage próprio, é aqui.
+      target: "filesystem",
+      outputDir: "lighthouse-results",
     },
   },
 };
