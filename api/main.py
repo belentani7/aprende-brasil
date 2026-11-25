@@ -1,6 +1,26 @@
+"""Aplicação FastAPI da Aprende Brasil.
+
+Dois modos convivem:
+
+- **Estático** (padrão e recomendado): o site é um build estático, o progresso
+  fica no navegador e o backend nem precisa existir.
+- **Com sessão**: quando este servidor está no ar, o progresso pode ser
+  sincronizado por uma sessão anônima. Todas as rotas de dados exigem o
+  cabeçalho ``Authorization: Bearer <token>``; nenhuma aceita ``user_id``.
+
+Configuração por ambiente (nunca por código versionado):
+
+- ``APRENDE_CORS_ORIGINS`` — lista separada por vírgula. Vazio = sem CORS
+  (o padrão, já que o site estático não faz chamadas cross-origin).
+- ``APRENDE_DB`` — caminho alternativo do SQLite.
+"""
+
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -8,28 +28,45 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from .database import engine, Base
-from .routes import tracks, modules, tutor, progress
+from .routes import tracks, modules, tutor, progress, session as session_routes
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Aprende Brasil API", version="1.0.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="Aprende Brasil API",
+    version="1.2.0",
+    description=(
+        "Conteúdo curricular e sessões anônimas. O campus estático não depende "
+        "deste servidor para funcionar."
+    ),
 )
+
+_cors_origins = [
+    origin.strip()
+    for origin in os.environ.get("APRENDE_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if _cors_origins:
+    # Lista explícita, sem curinga: credenciais de sessão nunca viajam para
+    # qualquer origem.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+        max_age=600,
+    )
 
 app.include_router(tracks.router)
 app.include_router(modules.router)
 app.include_router(tutor.router)
+app.include_router(session_routes.router)
 app.include_router(progress.router)
 
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "project": "aprende-brasil"}
+    return {"status": "ok", "project": "aprende-brasil", "version": "1.2.0"}
 
 
 # Serve React frontend in production (Vite output: dist/public)

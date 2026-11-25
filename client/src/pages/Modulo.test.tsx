@@ -91,9 +91,14 @@ describe("página do módulo", () => {
         screen.getByRole("progressbar", { name: "Progresso do módulo" })
       ).toHaveAttribute("aria-valuenow", "100");
     });
+    // A conclusão agora agenda a revisão espaçada e diz quando o módulo volta.
     expect(toastSuccess).toHaveBeenCalledWith("Módulo concluído!", {
-      description: "A letra A",
+      description: expect.stringMatching(/Revisão marcada para/),
     });
+    const reviews = JSON.parse(
+      window.localStorage.getItem("aprende-brasil:reviews") ?? "{}"
+    );
+    expect(reviews["alfa-letra-a"]?.repetitions).toBeGreaterThan(0);
   });
 
   it("mostra estado de erro para módulo inexistente", async () => {

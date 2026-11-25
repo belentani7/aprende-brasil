@@ -253,6 +253,36 @@ function topicLabel(module: ModuleWithSteps): string {
   return module.title;
 }
 
+/** Atividades do módulo (etapa de prática). */
+function activitiesOf(module: ModuleWithSteps) {
+  return module.steps.flatMap(step => step.content?.activities ?? []);
+}
+
+function objectivesOf(module: ModuleWithSteps): string[] {
+  return module.steps[0]?.content?.objectives ?? [];
+}
+
+/**
+ * Pista em vez de resposta: descreve o raciocínio que a atividade exige sem
+ * entregar o gabarito. É a diferença entre ajudar e fazer por.
+ */
+function hintFor(activity: ReturnType<typeof activitiesOf>[number]): string {
+  switch (activity.kind) {
+    case "multiple-choice":
+      return `“${activity.prompt}” — elimine primeiro a opção que contradiz o texto da etapa e explique em voz alta por que as outras duas não servem.`;
+    case "true-false":
+      return `“${activity.prompt}” — procure no texto o trecho que confirma ou desmente a frase antes de responder.`;
+    case "fill-blank":
+      return `“${activity.prompt}” — leia a frase inteira em voz alta e pergunte qual palavra faz sentido ali; acentuação e maiúscula não contam.`;
+    case "ordering":
+      return `“${activity.prompt}” — pergunte qual passo depende de outro: o que precisa acontecer antes vem primeiro.`;
+    case "matching":
+      return `“${activity.prompt}” — resolva primeiro os pares que você tem certeza; os que sobram se completam sozinhos.`;
+    case "numeric":
+      return `“${activity.prompt}” — escreva os dados no papel, escolha a operação e confira pelo caminho inverso antes de digitar.`;
+  }
+}
+
 function relatedLine(hits: ModuleWithSteps[], skip: ModuleWithSteps): string {
   const others = hits.filter(m => m.id !== skip.id);
   if (!others.length) return "";
@@ -386,6 +416,15 @@ function explicar(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
     parts.push("", "4) Como saber que você entendeu", proximo);
   }
 
+  const objectives = objectivesOf(main);
+  if (objectives.length) {
+    parts.push(
+      "",
+      "Ao final deste módulo, você deve conseguir:",
+      ...objectives.map(objective => `• ${objective}`)
+    );
+  }
+
   parts.push(
     "",
     "Dica de estudo: não leia tudo de uma vez. Faça a prática, erre, e só depois volte ao conceito — é assim que fixa.",
@@ -422,6 +461,27 @@ function exercicio(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
   const pratica = textOf(main, "practice");
   const check = textOf(main, "check");
   const conceito = textOf(main, "explanation");
+  const activities = activitiesOf(main);
+
+  if (activities.length) {
+    const lines = activities.map(
+      (activity, index) => `${index + 1}. ${activity.prompt}`
+    );
+    return [
+      `Boa! O módulo “${topicLabel(main)}” já tem ${activities.length} atividade${activities.length > 1 ? "s" : ""} para fazer agora.`,
+      "",
+      "Antes de começar, o essencial:",
+      firstSentence(conceito) || main.subtitle,
+      "",
+      "Exercício — o que responder no módulo:",
+      ...lines,
+      "",
+      "Se travar em alguma, me diga o número. Eu dou uma pista primeiro — a resposta, só depois que você tiver tentado.",
+      "",
+      `Para conferir sozinho: ${check || "refaça sem olhar e compare com o exemplo."}`,
+      relatedLine(hits, main),
+    ].join("\n");
+  }
 
   return [
     `Boa! Vamos treinar ${topicLabel(main)} agora.`,
@@ -440,7 +500,29 @@ function exercicio(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
   ].join("\n");
 }
 
+/** Dificuldade: aponta a pista da atividade em vez de resolver por você. */
+function pista(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
+  const activities = activitiesOf(main);
+  if (!activities.length) return dificuldade(main, hits);
+  return [
+    `Vamos destravar ${topicLabel(main)} sem entregar a resposta.`,
+    "",
+    "Onde costuma travar:",
+    textOf(main, "check") || "releia o exemplo devagar, sem pressa.",
+    "",
+    "Pista para cada atividade:",
+    ...activities.map(
+      (activity, index) => `${index + 1}. ${hintFor(activity)}`
+    ),
+    "",
+    "Tente a primeira com a pista. Se ainda não sair, me conte exatamente onde parou: na leitura, na conta, ou em começar.",
+    relatedLine(hits, main),
+  ].join("\n");
+}
+
 function revisao(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
+  const objectives = objectivesOf(main);
+  const activities = activitiesOf(main).length;
   const linhas = main.steps
     .map(
       (s, i) => `${i + 1}. ${s.title} — ${firstSentence(s.content?.text ?? "")}`
@@ -454,8 +536,13 @@ function revisao(main: ModuleWithSteps, hits: ModuleWithSteps[]): string {
     linhas,
     "",
     `Em resumo: ${firstSentence(textOf(main, "explanation")) || main.subtitle}`,
+    ...(objectives.length
+      ? ["", "Ao final, você deve conseguir:", ...objectives.map(o => `• ${o}`)]
+      : []),
     "",
-    "Para fixar de verdade, feche os olhos e tente repetir essas cinco etapas em voz alta. Depois abra o módulo e veja o que você esqueceu — o esquecimento mostra exatamente onde voltar.",
+    activities
+      ? `Há ${activities} atividade${activities > 1 ? "s" : ""} para conferir se ficou de verdade. Refaça sem olhar o texto: se acertar, aprendizado consolidado; se errar, é ali que você volta.`
+      : "Para fixar de verdade, feche os olhos e tente repetir essas cinco etapas em voz alta. Depois abra o módulo e veja o que você esqueceu — o esquecimento mostra exatamente onde voltar.",
     relatedLine(hits, main),
   ].join("\n");
 }
@@ -527,7 +614,7 @@ export function answerTutor(message: string, subject: string): TutorReply {
       : intent === "revisao"
         ? revisao(main, hits)
         : intent === "dificuldade"
-          ? dificuldade(main, hits)
+          ? pista(main, hits)
           : intent === "como"
             ? como(main, hits)
             : explicar(main, hits);

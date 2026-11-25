@@ -12,5 +12,15 @@ if (!existsSync(index)) {
 }
 
 // GitHub Pages serve 404.html como fallback de SPA (rewrites não existem lá).
+// O arquivo precisa usar o mesmo base das rotas para a navegação profunda
+// funcionar em /aprende-brasil/modulo/...
 copyFileSync(index, resolve(dist, "404.html"));
-console.log("postbuild: 404.html gerado para GitHub Pages");
+
+// Open Data é servido como arquivo estático. Garantir o .nojekyll evita que o
+// Pages ignore pastas que começam com "_" (comportamento do Jekyll).
+copyFileSync(resolve(root, "client", "public", ".nojekyll"), resolve(dist, ".nojekyll"));
+
+const base = process.env.VITE_BASE_PATH || "/";
+console.log(
+  `postbuild: 404.html e .nojekyll gerados (base "${base}") para GitHub Pages`
+);

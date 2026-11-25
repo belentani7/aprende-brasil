@@ -40,6 +40,21 @@ jobs:
       - name: Build de produção
         run: npm run build
 
+      - name: Build no subpath do GitHub Pages
+        run: VITE_BASE_PATH=/aprende-brasil/ npm run build
+
+      - name: Conferir assets e fallback do subpath
+        run: |
+          set -euo pipefail
+          grep -q '/aprende-brasil/assets/' dist/public/index.html
+          grep -q '/aprende-brasil/assets/' dist/public/404.html
+          test -f dist/public/.nojekyll
+          test -f dist/public/manifest.webmanifest
+          test -f dist/public/sw.js
+
+      - name: Build na raiz (Vercel/Netlify)
+        run: npm run build
+
       - name: Orçamento de bundle e contrato dos dados
         run: npm run audit
 
@@ -69,5 +84,8 @@ jobs:
           python3 scripts/export_static_curriculum.py --check
           git diff --exit-code -- client/src/data
 
-      - name: Suite Python (API, dados, conteúdo)
-        run: python -m pytest
+      - name: Suite Python (API, privacidade, tutor, dados, conteúdo)
+        run: python -m pytest -q
+
+      - name: Privacidade e limites do tutor (falha cedo se quebrar)
+        run: python -m pytest tests/test_privacy.py tests/test_tutor_limits.py -q

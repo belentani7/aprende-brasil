@@ -1,0 +1,74 @@
+name: Deploy Aprende Brasil (GitHub Pages)
+
+# Publica o build estático em https://belentani7.github.io/aprende-brasil/
+#
+# Requisitos no repositório (Settings → Pages):
+#   Source = "GitHub Actions"
+# Nenhum DNS de belentani.es é tocado por este workflow.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: aprende-brasil-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build estático
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # O subpath do Pages precisa estar no HTML, nos assets e no router.
+      - name: Build para /aprende-brasil/
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /aprende-brasil/
+
+      # Confere que o build realmente aponta para o subpath e que o fallback
+      # de SPA (404.html) existe — foi exatamente o que falhou antes.
+      - name: Verificar build do Pages
+        run: |
+          set -euo pipefail
+          test -f dist/public/index.html
+          test -f dist/public/404.html
+          test -f dist/public/.nojekyll
+          grep -q '/aprende-brasil/assets/' dist/public/index.html
+          grep -q '/aprende-brasil/assets/' dist/public/404.html
+          test -d dist/public/open-data
+          echo "Build do Pages verificado."
+
+      - name: Orçamento de bundle e contrato dos dados
+        run: npm run audit
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/public
+
+  deploy:
+    name: Publicar
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

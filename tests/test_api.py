@@ -6,7 +6,9 @@ from __future__ import annotations
 def test_health(client):
     r = client.get("/api/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok", "project": "aprende-brasil"}
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["project"] == "aprende-brasil"
 
 
 def test_tracks_lista_com_contagem(client):
@@ -90,36 +92,50 @@ def test_tutor_valida_mensagem_vazia(client):
 def test_tutor_health_sem_llm(client, no_llm):
     r = client.get("/api/tutor/health")
     assert r.status_code == 200
-    assert r.json() == {"llm_configured": False}
+    body = r.json()
+    assert body["llm_configured"] is False
+    assert body["llm_enabled"] is False
+    assert body["engine"] == "local"
+
+
+def _session(client):
+    body = client.post("/api/session").json()
+    return {"Authorization": f"Bearer {body['token']}"}
 
 
 def test_progresso_salva_e_nao_regride(client):
-    payload = {"user_id": 7, "module_id": "alfa-letra-a", "percent": 40}
-    assert client.post("/api/progress", json=payload).status_code == 200
+    headers = _session(client)
+    payload = {"module_id": "alfa-letra-a", "percent": 40}
+    assert client.post("/api/progress", json=payload, headers=headers).status_code == 200
 
     payload["percent"] = 20
-    r = client.post("/api/progress", json=payload)
+    r = client.post("/api/progress", json=payload, headers=headers)
     assert r.status_code == 200
     assert r.json()["percent"] == 40
 
-    rows = client.get("/api/progress", params={"user_id": 7}).json()
+    rows = client.get("/api/progress", headers=headers).json()
     assert len(rows) == 1
     assert rows[0]["module_id"] == "alfa-letra-a"
 
 
 def test_progresso_modulo_inexistente(client):
-    r = client.post("/api/progress", json={"user_id": 1, "module_id": "x", "percent": 10})
+    headers = _session(client)
+    r = client.post("/api/progress", json={"module_id": "x", "percent": 10}, headers=headers)
     assert r.status_code == 404
 
 
 def test_progresso_percentual_invalido(client):
-    r = client.post("/api/progress", json={"user_id": 1, "module_id": "alfa-letra-a", "percent": 150})
+    headers = _session(client)
+    r = client.post(
+        "/api/progress", json={"module_id": "alfa-letra-a", "percent": 150}, headers=headers
+    )
     assert r.status_code == 422
 
 
 def test_stats(client):
-    client.post("/api/progress", json={"user_id": 3, "module_id": "alfa-letra-a", "percent": 100})
-    r = client.get("/api/stats", params={"user_id": 3})
+    headers = _session(client)
+    client.post("/api/progress", json={"module_id": "alfa-letra-a", "percent": 100}, headers=headers)
+    r = client.get("/api/stats", headers=headers)
     assert r.status_code == 200
     body = r.json()
     assert body["total_modules"] == 2
@@ -129,17 +145,19 @@ def test_stats(client):
 
 
 def test_favoritos_toggle(client):
-    assert client.get("/api/favorites", params={"user_id": 5}).json() == []
+    headers = _session(client)
+    assert client.get("/api/favorites", headers=headers).json() == []
 
-    r = client.post("/api/favorites", json={"user_id": 5, "module_id": "mat-soma"})
+    r = client.post("/api/favorites", json={"module_id": "mat-soma"}, headers=headers)
     assert r.json() == {"favorited": True, "module_id": "mat-soma"}
-    assert client.get("/api/favorites", params={"user_id": 5}).json() == ["mat-soma"]
+    assert client.get("/api/favorites", headers=headers).json() == ["mat-soma"]
 
-    r = client.post("/api/favorites", json={"user_id": 5, "module_id": "mat-soma"})
+    r = client.post("/api/favorites", json={"module_id": "mat-soma"}, headers=headers)
     assert r.json() == {"favorited": False, "module_id": "mat-soma"}
-    assert client.get("/api/favorites", params={"user_id": 5}).json() == []
+    assert client.get("/api/favorites", headers=headers).json() == []
 
 
 def test_favorito_modulo_inexistente(client):
-    r = client.post("/api/favorites", json={"user_id": 1, "module_id": "nada"})
+    headers = _session(client)
+    r = client.post("/api/favorites", json={"module_id": "nada"}, headers=headers)
     assert r.status_code == 404

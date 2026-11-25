@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
+import ActivityCard from "@/components/ActivityCard";
 import { api, type ModuleWithSteps } from "@/lib/api";
 import { trackLabel } from "@/lib/curriculum";
 import { toast } from "sonner";
@@ -32,7 +33,9 @@ export default function Modulo() {
   const [percent, setPercent] = useState(0);
   const [favorite, setFavorite] = useState(false);
   const [savedNote, setSavedNote] = useState("");
+  const [learnedNote, setLearnedNote] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const answeredRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -122,7 +125,37 @@ export default function Modulo() {
     const all = module.steps.map(step => step.order);
     setDone(all);
     await persist(all);
-    toast.success("Módulo concluído!", { description: module.title });
+    // A conclusão agenda a revisão espaçada com base no desempenho real nas
+    // atividades — e avisa quando o módulo volta, sem prometer domínio.
+    const note = await api.completeModule(module.id);
+    setSavedNote(note);
+    toast.success("Módulo concluído!", { description: note });
+  };
+
+  const handleActivityResult = (
+    activityId: string,
+    result: { correct: boolean },
+    stepOrder: number
+  ) => {
+    if (!module) return;
+    answeredRef.current.add(activityId);
+    void api.recordAttempt({
+      moduleId: module.id,
+      activityId,
+      correct: result.correct,
+    });
+    if (result.correct) {
+      setLearnedNote(
+        `Atividade respondida. ${answeredRef.current.size} atividade(s) praticada(s) neste módulo.`
+      );
+      // Acertar a atividade já marca a etapa de prática: fazer é a evidência,
+      // não apenas ler.
+      if (!done.includes(stepOrder)) {
+        const completed = [...done, stepOrder];
+        setDone(completed);
+        void persist(completed);
+      }
+    }
   };
 
   const toggleFavorite = async () => {
@@ -259,7 +292,7 @@ export default function Modulo() {
             <span style={{ width: `${progress}%` }} />
           </div>
           <p className="sr-only" aria-live="polite">
-            {savedNote}
+            {savedNote} {learnedNote}
           </p>
         </section>
 
@@ -290,9 +323,75 @@ export default function Modulo() {
                     <h2>{step.title}</h2>
                   </div>
                   <p>{step.content?.text}</p>
+                  {step.content?.objectives?.length ? (
+                    <div className="step-objectives">
+                      <h3>Neste módulo você vai:</h3>
+                      <ul>
+                        {step.content.objectives.map(objective => (
+                          <li key={objective}>
+                            <Check size={13} aria-hidden="true" /> {objective}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {step.content?.examples?.length ? (
+                    <ul className="step-examples">
+                      {step.content.examples.map(example => (
+                        <li key={example}>{example}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {step.content?.vocabulary?.length ? (
+                    <dl className="step-vocabulary">
+                      {step.content.vocabulary.map(entry => (
+                        <div key={entry.term}>
+                          <dt>{entry.term}</dt>
+                          <dd>
+                            {entry.definition}
+                            {entry.example ? ` — ${entry.example}` : ""}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                  {step.content?.activities?.length ? (
+                    <div className="step-activities">
+                      <h3 className="step-activities-title">
+                        Pratique agora
+                        <span>
+                          {step.content.activities.length} atividade
+                          {step.content.activities.length > 1 ? "s" : ""}
+                        </span>
+                      </h3>
+                      {step.content.activities.map(activity => (
+                        <ActivityCard
+                          key={activity.id}
+                          activity={activity}
+                          onResult={result =>
+                            handleActivityResult(
+                              activity.id,
+                              result,
+                              step.order
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
                 <button
-                  onClick={() => speak(step.content?.text || "")}
+                  onClick={() =>
+                    speak(
+                      [
+                        step.title,
+                        step.content?.text || "",
+                        ...(step.content?.activities ?? []).map(
+                          activity => activity.prompt
+                        ),
+                      ].join(". ")
+                    )
+                  }
                   aria-label={`Ouvir a etapa ${step.title}`}
                   className="step-speak"
                 >

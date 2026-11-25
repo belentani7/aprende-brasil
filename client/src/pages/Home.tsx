@@ -351,7 +351,10 @@ export default function Home() {
             >
               <CircleHelp size={18} />
             </button>
-            <Link href="/sobre" className="login-button">
+            <Link href="/progresso" className="login-button">
+              Meu progresso <ArrowRight size={14} />
+            </Link>
+            <Link href="/sobre" className="login-button login-button--ghost">
               Sobre o projeto <ArrowRight size={14} />
             </Link>
           </div>
