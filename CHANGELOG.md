@@ -1,5 +1,91 @@
 # Changelog
 
+## [1.2.0] - 2026-11-25
+
+### Segurança e privacidade (P0)
+
+- `api/routes/progress.py` não aceita mais `user_id` do cliente. Progresso,
+  favoritos, estatísticas, exportação e importação derivam a identidade de uma
+  sessão autenticada (`api/auth.py`). `DEFAULT_USER` foi removido.
+- Sessão **anônima** (`POST /api/session`): sem nome, e-mail ou CPF; o banco
+  guarda só o hash SHA-256 do token, com validade deslizante de 180 dias.
+- Escritas idempotentes: restrição única por (estudante, módulo), merges
+  monotônicos e tratamento de `IntegrityError` para duplo clique.
+- `tests/test_privacy.py` (30 testes) prova isolamento entre estudantes,
+  rejeição de `user_id` no corpo (422) e ausência de dados pessoais.
+- CORS deixou de ser lista fixa de localhost: agora é
+  `APRENDE_CORS_ORIGINS`, e sem a variável não há CORS (o site é estático).
+
+### Tutor LLM (P0)
+
+- Modo generativo **desligado por padrão**: exige `LLM_ENABLED=1`.
+- Timeout de 12 s, concorrência máxima, teto diário de caracteres, limite por
+  IP, contexto truncado e *fallback* local em qualquer erro.
+- Payload ao provedor não leva token, identidade nem dados pessoais
+  (`tests/test_tutor_limits.py`).
+- Motor local passou a recuperar o módulo por palavras do conteúdo e a oferecer
+  **pistas** das atividades em vez da resposta pronta.
+
+### Motor de conteúdo
+
+- Contrato `StepData.content` ampliado de forma retrocompatível:
+  `objectives`, `examples`, `vocabulary`, `references` e `activities`.
+- Seis tipos de atividade implementados (múltipla escolha, verdadeiro/falso,
+  lacuna, ordenação, associação e numérica), com validação no build em Python,
+  no exportador e na CLI.
+- **448 atividades** e objetivos em todos os 205 módulos, escritos em português
+  brasileiro, sem infantilizar adultos.
+- Gabaritos numéricos são avaliados no build (`numeric_checked`): conta errada
+  quebra o build em vez de chegar ao estudante.
+
+### Experiência do estudante
+
+- Etapas agora mostram objetivos, atividades com feedback pedagógico e leitura
+  em voz alta que inclui os enunciados.
+- Acertar uma atividade marca a etapa de prática: fazer é a evidência.
+- Nova página `/progresso`: tentativas, acertos, módulos com atividade,
+  domínio por módulo, revisões pendentes, exportar, importar e reiniciar.
+- Revisão espaçada (SM-2 adaptado) agendada na conclusão do módulo, com base no
+  desempenho real — completar página não conta como domínio.
+- Importação aditiva que ignora módulos inexistentes e nunca reduz progresso.
+
+### PWA e offline
+
+- Manifest, ícones (192/512/maskable) e service worker versionado.
+- Atualização **nunca silenciosa**: a nova versão avisa e a pessoa escolhe
+  recarregar; caches antigos são limpos na ativação.
+- Faixa de estado para “sem conexão” e “versão nova disponível”.
+- Service worker não cacheia `/api/` nem requisições com `Authorization`.
+
+### Deploy
+
+- `vite.config.ts`: `base` configurável por `VITE_BASE_PATH`; preview com hosts
+  permitidos **explícitos e opcionais** (sem `allowedHosts: true` fixo); proxy
+  `/api` no dev.
+- `Base` do Vite muda assets e rotas juntos; o `404.html` é gerado com o mesmo
+  base.
+- Novo workflow `deploy-pages.yml` publica em `/aprende-brasil/` e verifica no
+  CI que assets, `404.html`, `.nojekyll` e `open-data/` apontam para o subpath.
+- `vercel.json`: reescrita que preserva `/api/`, `/assets/`, `/open-data/` e o
+  manifest; CSP e cache por tipo de arquivo.
+- `vite preview` deixa de devolver `index.html` para asset inexistente (404,
+  como no FastAPI).
+- `tools/aprende.mjs budget` entende builds em subpath.
+
+### Testes
+
+- Vitest: **104** (atividades, correção, SRS, armazenamento, renderizadores,
+  tutor, a11y).
+- pytest: **86** (API, privacidade, limites do tutor, dados, exportação,
+  qualidade do conteúdo).
+- Playwright: **21** testes em Chromium real (workflow `e2e.yml`), cobrindo
+  busca, URL profunda, atividades, progresso, favoritos, teclado, contraste,
+  exportação/importação, PWA e abertura offline.
+- Nenhum número de Lighthouse foi medido neste ambiente: o Chromium não está
+  disponível aqui, e o README diz isso explicitamente em vez de inventar
+  pontuação.
+
+
 ## [1.1.0] - 2026-11-25
 
 ### Restauração

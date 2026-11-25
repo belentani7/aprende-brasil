@@ -13,6 +13,9 @@ favoritos ficam no `localStorage` do navegador.
 
 - **205 módulos** com 5 etapas cada (entender → exemplo → praticar → verificar →
   próximo passo): **1.025 etapas** no total.
+- **448 atividades interativas** (múltipla escolha, verdadeiro/falso, lacuna,
+  ordenação, associação e resposta numérica) e **objetivos de aprendizagem** em
+  todos os módulos, com gabarito verificado no build.
   - Alfabetização: **93** módulos com palavras e textos reais do dia a dia.
   - Informática: **40** módulos.
   - Matemática: **40** módulos.
@@ -22,7 +25,13 @@ favoritos ficam no `localStorage` do navegador.
   de estudo.
 - **Página de leção** (`/modulo/:id`): cinco etapas, marcação com progresso
   persistente, favoritos e leitura em voz alta (pt-BR) do próprio navegador.
-- **Tutor Nilo** com motor local offline e LLM opcional no backend.
+- **Tutor Nilo** com motor local offline (recupera conteúdo real do currículo,
+  dá pistas em vez de respostas) e LLM opcional, desligado por padrão.
+- **Progresso real**: conclusão de módulo agenda revisão espaçada com base nos
+  acertos; `/progresso` mostra tentativas, domínio, pendências de revisão e
+  permite exportar, importar e reiniciar os dados.
+- **PWA instalável**: manifest, service worker versionado com aviso explícito de
+  atualização, funcionamento offline e faixa de estado sem conexão.
 - **Acessibilidade**: link para saltar ao conteúdo, diálogo com foco preso e
   fechamento por `Esc`, `aria-current`, `aria-pressed`, barras de progresso com
   valor acessível, textos alternativos, `prefers-reduced-motion` respeitado e
@@ -110,8 +119,9 @@ npm run dev:api        # FastAPI em http://localhost:8000 (tutor com LLM)
 | `npm run dev`              | Vite com recarregamento; gera o currículo antes                 |
 | `npm run build`            | Exporta o currículo, compila e cria o `404.html`                |
 | `npm run check`            | Typecheck (`tsc --noEmit`)                                      |
-| `npm test`                 | Vitest (52 testes: dados, tutor, progresso, componentes, a11y)  |
-| `npm run test:py`          | pytest (47 testes: API, dados, exportação, conteúdo, segurança) |
+| `npm test`                 | Vitest (104 testes: dados, atividades, SRS, tutor, PWA, a11y)  |
+| `npm run test:py`          | pytest (86 testes: API, privacidade, tutor, dados, conteúdo)    |
+| `npm run test:e2e`         | Playwright em Chromium real contra o build (21 testes)          |
 | `npm run verify`           | check + testes + build + orçamento                              |
 | `npm run audit`            | Valida o contrato dos dados e o orçamento de bundle             |
 | `npm run stats`            | Números do currículo por trilha e tipo de etapa                 |
@@ -151,8 +161,19 @@ justificativa no PR.
 - JSON exportado idêntico ao banco, inclusive os textos;
 - qualidade editorial: sem placeholders, palavras curadas em cada módulo de
   letra/família/tema e exemplos reais nos textos do dia a dia;
+- **privacidade**: todas as rotas de dados exigem sessão; `user_id` no corpo
+  devolve 422; testes de acesso cruzado provam que um estudante não lê nem
+  altera o progresso de outro;
+- **tutor**: LLM desligado sem `LLM_ENABLED=1`, orçamento diário, concorrência
+  máxima, limite por IP, timeout e *fallback* local em qualquer falha; o payload
+  enviado ao provedor não carrega token nem identidade;
 - segurança do servidor de SPA: bloqueia `../`, caminhos absolutos e symlinks
   que apontem para fora de `dist/public`.
+
+**E2E (Playwright, Chromium real)** — roda em `.github/workflows/e2e.yml`:
+busca global, paginação, URL profunda, atividades dos seis tipos, progresso
+persistente, favoritos, tutor sem rede, navegação por teclado, contraste
+calculado, exportação/importação, manifest/service worker e abertura offline.
 
 ## Deploy
 
@@ -163,7 +184,7 @@ O site é estático. O backend não é necessário em produção.
 | Vercel           | `vercel.json` → `npm ci`, `npm run build`, `dist/public`             |
 | Netlify          | `netlify.toml` → `npm run build`, `dist/public`                      |
 | Cloudflare Pages | build `npm run build`, saída `dist/public`, `functions/[[path]].js`  |
-| GitHub Pages     | publicar `dist/public`; use `--base=/aprende-brasil/` para o subpath |
+| GitHub Pages     | automático em `.github/workflows/deploy-pages.yml` (`VITE_BASE_PATH=/aprende-brasil/`) |
 
 Notas de campo que custaram tempo:
 
@@ -176,8 +197,15 @@ Notas de campo que custaram tempo:
   catch-all serve `/assets/*.js` como `text/html`; o fallback correto é a Pages
   Function em `functions/`.
 - **GitHub Pages**: serve em subpath, então o build precisa de
-  `--base=/aprende-brasil/` **e** o `WouterRouter` usa `import.meta.env.BASE_URL`.
-  O fallback é o `404.html` gerado no postbuild.
+  `VITE_BASE_PATH=/aprende-brasil/` **e** o `WouterRouter` usa
+  `import.meta.env.BASE_URL`. O fallback é o `404.html` gerado no postbuild (com
+  o mesmo base). O workflow confere no CI que `index.html`, `404.html` e os
+  assets apontam para o subpath e que `open-data/` foi publicado.
+  Ative **Settings → Pages → Source: GitHub Actions** uma única vez.
+- **Vite preview**: o fallback de SPA respondia `index.html` (200) também para
+  `/assets/*.js` inexistente, o que esconde asset quebrado como erro de MIME
+  type. O plugin `previewAssetGuard` em `vite.config.ts` devolve 404 para
+  caminhos com extensão, igual ao `SPAStaticFiles` do FastAPI.
 
 ## Dados e privacidade
 
@@ -188,6 +216,10 @@ Notas de campo que custaram tempo:
   dispositivo.
 - O tutor local funciona sem rede. Com `VITE_API_URL` definido, o cliente tenta
   o backend e cai para o motor local se ele não responder.
+- **Sincronização opcional sem cadastro**: `POST /api/session` cria uma sessão
+  anônima (sem nome, e-mail ou CPF). O token fica no aparelho e o banco guarda
+  só o hash SHA-256. Nenhuma rota de dados aceita `user_id` do cliente.
+- O service worker não cacheia `/api/` nem requisições com `Authorization`.
 
 ## API opcional
 
@@ -198,18 +230,32 @@ Notas de campo que custaram tempo:
 | `GET`        | `/api/modules?track=&search=&page=` | catálogo paginado             |
 | `GET`        | `/api/modules/featured`             | destaques                     |
 | `GET`        | `/api/modules/{id}`                 | módulo + etapas               |
-| `POST`       | `/api/tutor/ask`                    | tutor Nilo                    |
-| `GET`/`POST` | `/api/progress`                     | progresso por módulo          |
-| `GET`/`POST` | `/api/favorites`                    | favoritos (toggle)            |
-| `GET`        | `/api/stats`                        | resumo do usuário             |
+| `POST`       | `/api/tutor/ask`                    | tutor Nilo (local; LLM opt-in)|
+| `POST`       | `/api/session`                      | cria sessão anônima           |
+| `GET`        | `/api/session`                      | valida a sessão do cabeçalho  |
+| `GET`/`POST` | `/api/progress`                     | progresso por módulo 🔒       |
+| `DELETE`     | `/api/progress`                     | reinício voluntário 🔒        |
+| `GET`/`POST` | `/api/favorites`                    | favoritos (toggle) 🔒         |
+| `GET`        | `/api/stats`                        | resumo do estudante 🔒        |
+| `GET`        | `/api/export` / `POST /api/import`  | portabilidade 🔒              |
 
-Configuração do LLM (somente no backend):
+🔒 = exige `Authorization: Bearer <token>`. Sem o cabeçalho, a resposta é 401.
+
+Configuração do LLM (somente no backend, **desligado por padrão**):
 
 ```
+LLM_ENABLED=1                      # sem isto, o tutor é sempre local
 LLM_API_URL=https://api.exemplo.com/v1/chat/completions
 LLM_API_KEY=...
 LLM_MODEL=gpt-4o-mini
+LLM_TIMEOUT_SECONDS=12             # opcional
+LLM_DAILY_CHAR_BUDGET=200000       # teto de caracteres/dia
+LLM_MAX_CONCURRENCY=2              # requisições simultâneas
+LLM_PER_IP_PER_HOUR=30             # limite por IP
 ```
+
+O modo generativo devolve `source: "llm"` para que a interface deixe claro que
+aquela resposta não é do motor pedagógico determinístico.
 
 ## Qualidade medida
 
@@ -217,14 +263,19 @@ Medido neste repositório com `npm run build && npm run audit`:
 
 | Métrica             | Valor                      |
 | ------------------- | -------------------------- |
-| JS inicial          | ≈106 KiB gzip              |
-| CSS                 | ≈10,4 KiB gzip             |
-| Bundle total (dist) | ≈803 KiB em disco          |
-| Testes              | 52 Vitest + 47 pytest (99) |
+| JS inicial          | 108,9 KiB gzip              |
+| CSS                 | 11,9 KiB gzip              |
+| Bundle total (dist) | 999,5 KiB em disco         |
+| Atividades          | 448 (gabarito verificado)  |
+| Testes              | 104 Vitest + 86 pytest + 21 E2E |
 | Typecheck           | limpo (`strict: true`)     |
 
-Lighthouse não é executado no CI porque o runner não traz um Chrome
-controlável; o orçamento de bundle é a regressão automatizada de performance.
+**Lighthouse não foi medido.** Este ambiente não tem Chromium disponível (o
+download do Playwright é bloqueado), então nenhum número de performance,
+acessibilidade ou PWA do Lighthouse é reportado aqui — inventá-lo seria pior do
+que não ter. O workflow `e2e.yml` roda Lighthouse CI no navegador real e guarda
+o relatório como artifact; o orçamento de bundle continua sendo a regressão
+automatizada de performance no CI principal.
 
 ## Próximos passos
 

@@ -1,0 +1,62 @@
+name: E2E (navegador real)
+
+# Testes de ponta a ponta com Chromium real contra o build estático servido
+# pelo `vite preview`. Rodam em PR e em main: são a rede de segurança para
+# rotas profundas, atividades, progresso e PWA — coisas que o JSDOM não prova.
+#
+# Diferença deliberada em relação ao job `web` do CI: aqui o navegador é real,
+# com CSS, layout, service worker e navegação de verdade.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    name: Playwright (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build estático
+        run: npm run build
+
+      - name: Verificações de acessibilidade e performance (Lighthouse CI)
+        run: npx --yes @lhci/cli@0.14.x autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        continue-on-error: true
+
+      - name: Testes Playwright
+        run: npx playwright test
+
+      - name: Guardar relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

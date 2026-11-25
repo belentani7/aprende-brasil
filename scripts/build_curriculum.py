@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from api.database import Base, SessionLocal, engine  # noqa: E402
 from api.models import Module, ModuleStep, Track  # noqa: E402
+from scripts.activities_by_module import activity_count, check_coverage, content_json  # noqa: E402
 from scripts.content_alfabetizacao import ALFABETIZACAO  # noqa: E402
 from scripts.content_idiomas import IDIOMAS  # noqa: E402
 from scripts.content_informatica import INFORMATICA  # noqa: E402
@@ -47,8 +48,10 @@ def add(db, mid, track, title, subtitle, level, order, duration, featured, step_
     ))
     db.flush()
     for i, (tp, tt, tx) in enumerate(step_rows, 1):
+        # content_json funde o texto curado com objetivos (etapa 1) e atividades
+        # interativas (etapa de prática) e valida o contrato antes de gravar.
         db.add(ModuleStep(module_id=mid, order=i, step_type=tp, title=tt,
-                          content_json=json.dumps({"text": tx}, ensure_ascii=False)))
+                          content_json=content_json(mid, tp, tx)))
 
 
 # ── Alfabetização ────────────────────────────────────────────────────────
@@ -67,6 +70,16 @@ def seed_from_content(db, track: str, level: str, items) -> int:
     return len(items)
 
 
+def _module_ids() -> list[str]:
+    """Todos os ids que serão semeados — usado para checar cobertura."""
+    return (
+        [item[0] for item in ALFABETIZACAO]
+        + [item[0] for item in INFORMATICA]
+        + [item[0] for item in MATEMATICA]
+        + [item[0] for item in IDIOMAS]
+    )
+
+
 def main() -> int:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -78,6 +91,8 @@ def main() -> int:
     for tid, (label, eyebrow, desc, color, icon) in TRACKS.items():
         db.add(Track(id=tid, label=label, eyebrow=eyebrow, description=desc, color=color, icon=icon, target_modules=0))
     db.commit()
+
+    check_coverage(_module_ids())
 
     n = 0
     n += seed_alfabetizacao(db)
@@ -91,6 +106,7 @@ def main() -> int:
         print(f"  {TRACKS[tid][0]}: {c} módulos")
     total = db.query(Module).count()
     print(f"\nTotal: {total} módulos, {db.query(ModuleStep).count()} etapas")
+    print(f"Atividades interativas: {activity_count()} (validadas no build)")
     db.close()
     return 0
 

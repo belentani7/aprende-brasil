@@ -1,6 +1,23 @@
 import { getModuleWithSteps, MODULES, TRACKS } from "./curriculum";
+import {
+  clampPercent,
+  exportProgress,
+  importProgress,
+  KEYS,
+  readSnapshot,
+  readStore,
+  resetProgress,
+  sanitizeAttempts,
+  sanitizeReviews,
+  writeStore,
+  type Attempt,
+  type ImportResult,
+  type ProgressSnapshot,
+} from "./progress";
+import { qualityFromScore, scheduleReview, type ReviewMap } from "./srs";
 import { isoDate } from "./week";
 import type {
+  ActivityAttempt,
   ModuleData,
   ModuleWithSteps,
   ModulesResponse,
@@ -23,10 +40,6 @@ export type {
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const PER_PAGE = 20;
-const PROGRESS_KEY = "aprende-brasil:progress";
-const STEPS_KEY = "aprende-brasil:completed-steps";
-const FAVORITES_KEY = "aprende-brasil:favorites";
-const ACTIVITY_KEY = "aprende-brasil:activity";
 
 type ProgressMap = Record<string, number>;
 type CompletedMap = Record<string, number[]>;
@@ -36,27 +49,7 @@ export type ModuleProgress = {
   completed: number[];
 };
 
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(100, Math.max(0, value));
-}
-
-function readStore<T>(key: string, fallback: T): T {
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStore(key: string, value: unknown): void {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* modo privado / quota: mantém em memória */
-  }
-}
+const MODULE_IDS = new Set(MODULES.map(m => m.id));
 
 async function askRemoteTutor(
   message: string,
@@ -132,7 +125,7 @@ export const api = {
   },
 
   getStats: async (): Promise<StatsData> => {
-    const progress = readStore<ProgressMap>(PROGRESS_KEY, {});
+    const progress = readStore<ProgressMap>(KEYS.progress, {});
     const values = Object.values(progress);
     const total = MODULES.length;
     return {
@@ -147,13 +140,13 @@ export const api = {
 
   /** Percentual já alcançado por módulo (usado no catálogo da tela inicial). */
   getProgressMap: async (): Promise<Record<string, number>> =>
-    readStore<ProgressMap>(PROGRESS_KEY, {}),
+    readStore<ProgressMap>(KEYS.progress, {}),
 
   getModuleProgress: async (moduleId: string): Promise<ModuleProgress> => {
     const percent = clampPercent(
-      readStore<ProgressMap>(PROGRESS_KEY, {})[moduleId] ?? 0
+      readStore<ProgressMap>(KEYS.progress, {})[moduleId] ?? 0
     );
-    const completed = readStore<CompletedMap>(STEPS_KEY, {})[moduleId] ?? [];
+    const completed = readStore<CompletedMap>(KEYS.steps, {})[moduleId] ?? [];
     return { percent, completed: [...completed].sort((a, b) => a - b) };
   },
 
@@ -166,48 +159,127 @@ export const api = {
     percent: number,
     completed?: number[]
   ): Promise<ModuleProgress> => {
-    const progress = readStore<ProgressMap>(PROGRESS_KEY, {});
+    const progress = readStore<ProgressMap>(KEYS.progress, {});
     const next = Math.max(progress[moduleId] ?? 0, clampPercent(percent));
     progress[moduleId] = next;
-    writeStore(PROGRESS_KEY, progress);
+    writeStore(KEYS.progress, progress);
 
     if (completed) {
-      const steps = readStore<CompletedMap>(STEPS_KEY, {});
+      const steps = readStore<CompletedMap>(KEYS.steps, {});
       const previous = steps[moduleId] ?? [];
       steps[moduleId] = Array.from(new Set(completed)).sort((a, b) => a - b);
-      writeStore(STEPS_KEY, steps);
+      writeStore(KEYS.steps, steps);
 
       const fresh = steps[moduleId].filter(
         order => !previous.includes(order)
       ).length;
       if (fresh > 0) {
-        const activity = readStore<Record<string, number>>(ACTIVITY_KEY, {});
+        const activity = readStore<Record<string, number>>(KEYS.activity, {});
         const key = isoDate(new Date());
         activity[key] = (activity[key] ?? 0) + fresh;
-        writeStore(ACTIVITY_KEY, activity);
+        writeStore(KEYS.activity, activity);
       }
     }
 
     return {
       percent: next,
-      completed: readStore<CompletedMap>(STEPS_KEY, {})[moduleId] ?? [],
+      completed: readStore<CompletedMap>(KEYS.steps, {})[moduleId] ?? [],
     };
   },
 
   /** Atividade diária real (etapas marcadas por dia), para o painel semanal. */
   getActivity: async (): Promise<Record<string, number>> =>
-    readStore<Record<string, number>>(ACTIVITY_KEY, {}),
+    readStore<Record<string, number>>(KEYS.activity, {}),
+
+  /** Registra uma tentativa de atividade (evidência real de aprendizagem). */
+  recordAttempt: async (
+    attempt: Omit<ActivityAttempt, "at">
+  ): Promise<void> => {
+    const attempts = sanitizeAttempts(readStore<Attempt[]>(KEYS.attempts, []));
+    attempts.push({ ...attempt, at: Date.now() });
+    writeStore(KEYS.attempts, attempts.slice(-2000));
+  },
+
+  getAttempts: async (): Promise<ActivityAttempt[]> =>
+    sanitizeAttempts(readStore<Attempt[]>(KEYS.attempts, [])),
+
+  /**
+   * Fecha um módulo: agenda a revisão espaçada a partir do desempenho nas
+   * atividades. Sem atividades respondidas, a qualidade é neutra (3) e o
+   * módulo volta em 1 dia — completar página não é domínio.
+   */
+  completeModule: async (moduleId: string): Promise<string> => {
+    const attempts = sanitizeAttempts(
+      readStore<Attempt[]>(KEYS.attempts, [])
+    ).filter(a => a.moduleId === moduleId);
+    const correct = attempts.filter(a => a.correct).length;
+    const quality = attempts.length
+      ? qualityFromScore(correct, attempts.length)
+      : 3;
+    const reviews = sanitizeReviews(readStore<ReviewMap>(KEYS.reviews, {}));
+    reviews[moduleId] = scheduleReview(
+      reviews[moduleId] ?? {
+        repetitions: 0,
+        intervalDays: 0,
+        ease: 2.5,
+        dueAt: 0,
+      },
+      quality
+    );
+    writeStore(KEYS.reviews, reviews);
+    return reviews[moduleId].intervalDays === 1
+      ? "Revisão marcada para amanhã."
+      : `Revisão marcada para daqui a ${reviews[moduleId].intervalDays} dias.`;
+  },
+
+  getReviews: async (): Promise<ReviewMap> =>
+    sanitizeReviews(readStore<ReviewMap>(KEYS.reviews, {})),
+
+  /** Exportação completa (progresso, etapas, favoritos, tentativas, revisões). */
+  exportData: async (): Promise<ProgressSnapshot> => exportProgress(),
+
+  importData: async (payload: unknown): Promise<ImportResult> =>
+    importProgress(payload, { validIds: MODULE_IDS }),
+
+  resetData: async (): Promise<void> => resetProgress(),
+
+  /** Resumo usado pela tela de progresso. */
+  getSummary: async () => {
+    const snapshot = readSnapshot();
+    const values = Object.values(snapshot.progress);
+    const attempts = snapshot.attempts ?? [];
+    const correct = attempts.filter(a => a.correct).length;
+    return {
+      total_modules: MODULES.length,
+      started: values.length,
+      completed: values.filter(p => p >= 100).length,
+      overall_percent: MODULES.length
+        ? Math.round(
+            (values.reduce((a, b) => a + b, 0) / MODULES.length) * 10
+          ) / 10
+        : 0,
+      activities_answered: attempts.length,
+      activities_correct: correct,
+      activities_accuracy: attempts.length
+        ? Math.round((correct / attempts.length) * 100)
+        : null,
+      favorites: snapshot.favorites.length,
+      reviews_due: Object.values(snapshot.reviews ?? {}).filter(
+        state => state.repetitions === 0 || state.dueAt <= Date.now()
+      ).length,
+    };
+  },
 
   getFavorites: async (): Promise<string[]> =>
-    readStore<string[]>(FAVORITES_KEY, []),
+    readStore<string[]>(KEYS.favorites, []),
 
   toggleFavorite: async (moduleId: string): Promise<{ favorited: boolean }> => {
-    const favorites = readStore<string[]>(FAVORITES_KEY, []);
+    const favorites = readStore<string[]>(KEYS.favorites, []);
     const has = favorites.includes(moduleId);
     const next = has
       ? favorites.filter(id => id !== moduleId)
       : [...favorites, moduleId];
-    writeStore(FAVORITES_KEY, next);
+    writeStore(KEYS.favorites, next);
     return { favorited: !has };
   },
 };

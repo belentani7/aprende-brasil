@@ -38,12 +38,16 @@ describe("tutor Nilo (motor local)", () => {
     expect(answer).not.toMatch(/aabora|aaiún|baal/);
   });
 
-  it("monta exercício com a etapa de prática do módulo", () => {
+  it("monta exercício a partir das atividades reais do módulo", () => {
     const modulo = byId("mat-soma");
-    const pratica = modulo.steps.find(s => s.type === "practice")!;
+    const activities = modulo.steps.flatMap(s => s.content.activities ?? []);
     const { answer } = answerTutor("crie um exercício de soma", "matematica");
-    expect(answer).toContain("Exercício");
-    expect(answer).toContain(pratica.content.text);
+    expect(answer).toContain("atividades para fazer agora");
+    expect(answer).toContain("Exercício — o que responder no módulo");
+    // O tutor cita o enunciado real da atividade, não um exercício inventado.
+    for (const activity of activities) {
+      expect(answer).toContain(activity.prompt);
+    }
   });
 
   it("faz revisão listando as cinco etapas", () => {

@@ -41,6 +41,16 @@ def _seed(db):
     db.commit()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """O limitador é por processo; cada teste começa com a janela limpa."""
+    from api.limits import limiter
+
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
 @pytest.fixture()
 def client(tmp_path):
     """TestClient com um SQLite isolado por teste (não toca data/aprende.db)."""

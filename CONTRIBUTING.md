@@ -31,6 +31,21 @@ aumentar o orçamento de bundle sem justificativa.
 - Depois de mudar conteúdo: `node scripts/run-python.mjs -m scripts.build_curriculum`
   e `npm run curriculum`, e rode `npm run test:py`.
 
+### Atividades e objetivos
+
+- Todo módulo precisa de **objetivos** e de **pelo menos duas atividades** em
+  `scripts/specs_<trilha>.py`. `check_coverage()` falha o build se faltar.
+- Gabarito numérico **nunca** é digitado: use `numeric_checked(...)`, que avalia
+  a expressão no build e quebra se a conta estiver errada.
+- Múltipla escolha usa `multiple_choice(..., correct=resposta)`: o índice é
+  calculado, então é impossível apontar para a opção errada.
+- Atividades usam o vocabulário que a etapa já apresentou. Nada de palavra nova
+  sem explicação na etapa.
+- Escreva para pessoas adultas: exemplos de boleto, receita, crachá, bula e
+  ônibus; sem infantilizar.
+- Rode `node tools/aprende.mjs validate` — ele checa os seis tipos de atividade,
+  ids repetidos, gabaritos inválidos e cobertura por módulo.
+
 ## Código
 
 - TypeScript estrito; sem `any` desnecessário.

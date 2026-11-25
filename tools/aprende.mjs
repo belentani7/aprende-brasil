@@ -77,6 +77,9 @@ function gzipSize(path) {
 const commands = {
   stats() {
     const { catalog, steps } = loadData();
+    const activities = Object.values(steps)
+      .flat()
+      .reduce((sum, step) => sum + (step.content?.activities?.length ?? 0), 0);
     const modules = catalog.modules;
     const perTrack = new Map();
     for (const module of modules) {
@@ -98,6 +101,7 @@ const commands = {
         ["Trilhas", String(catalog.tracks.length)],
         ["Módulos", String(modules.length)],
         ["Etapas", String(totalSteps)],
+        ["Atividades", String(activities)],
         ["Catálogo", fmt(statSync(CATALOG).size)],
         ["Etapas (arquivo)", fmt(statSync(STEPS).size)],
       ])
@@ -180,6 +184,85 @@ const commands = {
     if (totalSteps !== 1025)
       errors.push(`esperadas 1025 etapas, encontradas ${totalSteps}`);
 
+    // ── Atividades interativas: contrato e cobertura ────────────────────
+    const ACTIVITY_KINDS = new Set([
+      "multiple-choice",
+      "true-false",
+      "fill-blank",
+      "ordering",
+      "matching",
+      "numeric",
+    ]);
+    let totalActivities = 0;
+    let modulesWithoutActivities = 0;
+    let modulesWithoutObjectives = 0;
+
+    for (const module of catalog.modules) {
+      const list = steps[module.id] ?? [];
+      const objectives = list[0]?.content?.objectives;
+      if (!Array.isArray(objectives) || objectives.length < 2)
+        modulesWithoutObjectives += 1;
+
+      let moduleActivities = 0;
+      for (const step of list) {
+        const activities = step.content?.activities;
+        if (activities === undefined) continue;
+        if (!Array.isArray(activities)) {
+          errors.push(`${module.id}/${step.order}: activities não é lista`);
+          continue;
+        }
+        const seen = new Set();
+        for (const activity of activities) {
+          totalActivities += 1;
+          moduleActivities += 1;
+          if (!ACTIVITY_KINDS.has(activity.kind))
+            errors.push(`${module.id}: kind inválido ${activity.kind}`);
+          if (!activity.id || seen.has(activity.id))
+            errors.push(`${module.id}: id de atividade repetido ${activity.id}`);
+          seen.add(activity.id);
+          if (!activity.prompt?.trim())
+            errors.push(`${module.id}/${activity.id}: enunciado vazio`);
+          if (activity.kind === "multiple-choice") {
+            const options = activity.options ?? [];
+            if (
+              !Number.isInteger(activity.correctIndex) ||
+              activity.correctIndex < 0 ||
+              activity.correctIndex >= options.length
+            )
+              errors.push(`${module.id}/${activity.id}: correctIndex fora das opções`);
+            if (new Set(options).size !== options.length)
+              errors.push(`${module.id}/${activity.id}: opções repetidas`);
+          }
+          if (activity.kind === "true-false" && typeof activity.answer !== "boolean")
+            errors.push(`${module.id}/${activity.id}: answer não booleano`);
+          if (activity.kind === "fill-blank" && !(activity.acceptedAnswers?.length))
+            errors.push(`${module.id}/${activity.id}: sem respostas aceitas`);
+          if (activity.kind === "ordering") {
+            const order = activity.correctOrder ?? [];
+            const items = activity.items ?? [];
+            if (order.length !== items.length || order.some((v, i) => typeof v !== "number"))
+              errors.push(`${module.id}/${activity.id}: correctOrder inválida`);
+          }
+          if (activity.kind === "matching" && (activity.pairs?.length ?? 0) < 2)
+            errors.push(`${module.id}/${activity.id}: pares insuficientes`);
+          if (activity.kind === "numeric") {
+            if (!Number.isFinite(activity.answer))
+              errors.push(`${module.id}/${activity.id}: resposta não numérica`);
+            if (!(activity.tolerance >= 0))
+              errors.push(`${module.id}/${activity.id}: tolerância inválida`);
+          }
+        }
+      }
+      if (moduleActivities === 0) modulesWithoutActivities += 1;
+    }
+
+    if (totalActivities < 400)
+      errors.push(`esperadas ao menos 400 atividades, encontradas ${totalActivities}`);
+    if (modulesWithoutActivities)
+      errors.push(`${modulesWithoutActivities} módulo(s) sem atividade interativa`);
+    if (modulesWithoutObjectives)
+      errors.push(`${modulesWithoutObjectives} módulo(s) sem objetivos de aprendizagem`);
+
     if (errors.length) {
       console.error(`Falha na validação (${errors.length} problema(s)):\n`);
       for (const error of errors.slice(0, 40)) console.error(`  ✗ ${error}`);
@@ -189,7 +272,8 @@ const commands = {
 
     console.log(
       `✓ Currículo válido: ${catalog.tracks.length} trilhas, ` +
-        `${moduleIds.size} módulos, ${totalSteps} etapas em 5 passos cada.`
+        `${moduleIds.size} módulos, ${totalSteps} etapas em 5 passos e ` +
+        `${totalActivities} atividades interativas.`
     );
     return 0;
   },
@@ -216,12 +300,21 @@ const commands = {
     const rows = [];
     let failed = false;
 
+    // O build pode ser servido em subpasta (GitHub Pages em /aprende-brasil/).
+    // Aqui interessa o caminho dentro de dist/public, não a URL pública.
+    const distPath = url => {
+      const clean = url.replace(/^https?:\/\/[^/]+/, "").replace(/^\//, "");
+      const marker = clean.indexOf("assets/");
+      const relative = marker > 0 ? clean.slice(marker) : clean;
+      return join(DIST, relative);
+    };
+
     const jsGzip = initialJs.reduce(
-      (sum, src) => sum + gzipSize(join(DIST, src.replace(/^\//, ""))),
+      (sum, src) => sum + gzipSize(distPath(src)),
       0
     );
     const cssGzip = css.reduce(
-      (sum, href) => sum + gzipSize(join(DIST, href.replace(/^\//, ""))),
+      (sum, href) => sum + gzipSize(distPath(href)),
       0
     );
 

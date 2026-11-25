@@ -32,10 +32,71 @@ EXPECTED_TRACKS = 4
 EXPECTED_MODULES = 205
 EXPECTED_STEPS = 1025
 STEP_TYPES = ["explanation", "example", "practice", "check", "next"]
+ACTIVITY_KINDS = {
+    "multiple-choice",
+    "true-false",
+    "fill-blank",
+    "ordering",
+    "matching",
+    "numeric",
+}
+MIN_ACTIVITIES = 400
 
 
 def _serialize(payload: object) -> str:
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def validate_step_content(module_id: str, step: dict) -> None:
+    """Valida o contrato StepData (texto + campos novos) direto no exportador.
+
+    O exportador roda só com a stdlib no build (sem importar FastAPI), então as
+    regras essenciais das atividades são reaplicadas aqui: se o SQLite tiver
+    atividade quebrada, o JSON não é gerado.
+    """
+    content = step["content"]
+    path = f"{module_id}/{step['order']}"
+    activities = content.get("activities")
+    if activities is None:
+        return
+    if not isinstance(activities, list) or len(activities) > 4:
+        raise ValueError(f"{path}: lista de atividades inválida")
+    seen_ids: set[str] = set()
+    for activity in activities:
+        kind = activity.get("kind")
+        if kind not in ACTIVITY_KINDS:
+            raise ValueError(f"{path}: atividade com kind inválido {kind!r}")
+        activity_id = activity.get("id")
+        if not activity_id or activity_id in seen_ids:
+            raise ValueError(f"{path}: atividade sem id ou id repetido {activity_id!r}")
+        seen_ids.add(activity_id)
+        if kind == "multiple-choice":
+            options = activity.get("options") or []
+            index = activity.get("correctIndex")
+            if not isinstance(index, int) or not (0 <= index < len(options)):
+                raise ValueError(f"{path}/{activity_id}: correctIndex fora das opções")
+            if len(set(options)) != len(options):
+                raise ValueError(f"{path}/{activity_id}: opções repetidas")
+        elif kind == "true-false":
+            if not isinstance(activity.get("answer"), bool):
+                raise ValueError(f"{path}/{activity_id}: answer não é booleano")
+        elif kind == "fill-blank":
+            if not activity.get("acceptedAnswers"):
+                raise ValueError(f"{path}/{activity_id}: sem respostas aceitas")
+        elif kind == "ordering":
+            items = activity.get("items") or []
+            order = activity.get("correctOrder") or []
+            if sorted(order) != list(range(len(items))):
+                raise ValueError(f"{path}/{activity_id}: correctOrder inválida")
+        elif kind == "matching":
+            pairs = activity.get("pairs") or []
+            if len(pairs) < 2:
+                raise ValueError(f"{path}/{activity_id}: pares insuficientes")
+        elif kind == "numeric":
+            if not isinstance(activity.get("answer"), (int, float)):
+                raise ValueError(f"{path}/{activity_id}: resposta não numérica")
+            if float(activity.get("tolerance", -1)) < 0:
+                raise ValueError(f"{path}/{activity_id}: tolerância negativa")
 
 
 def _write(path: Path, payload: object) -> int:
@@ -115,6 +176,17 @@ def export(check: bool = False) -> dict:
             content = step["content"]
             if not isinstance(content, dict) or not str(content.get("text", "")).strip():
                 raise ValueError(f"{module['id']}/{step['order']}: etapa sem texto")
+            validate_step_content(module["id"], step)
+
+    activities = sum(
+        len(step["content"].get("activities") or [])
+        for steps_list in steps_by_module.values()
+        for step in steps_list
+    )
+    if activities < MIN_ACTIVITIES:
+        raise ValueError(
+            f"Atividades insuficientes no currículo: {activities} (mínimo {MIN_ACTIVITIES})"
+        )
 
     catalog_payload = {"tracks": tracks, "modules": modules}
     if check:
@@ -136,6 +208,7 @@ def export(check: bool = False) -> dict:
         "tracks": len(tracks),
         "modules": len(modules),
         "steps": total_steps,
+        "activities": activities,
         "catalog_bytes": catalog_bytes,
         "steps_bytes": steps_bytes,
         "catalog": str(CATALOG.relative_to(ROOT)),

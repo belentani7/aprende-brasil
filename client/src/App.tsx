@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Route, Router as WouterRouter, Switch } from "wouter";
+import AppStatus from "./components/AppStatus";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Home from "./pages/Home";
 
@@ -8,6 +9,7 @@ import Home from "./pages/Home";
 // código da leção, da página institucional nem do 404.
 const Modulo = lazy(() => import("./pages/Modulo"));
 const Sobre = lazy(() => import("./pages/Sobre"));
+const Progresso = lazy(() => import("./pages/Progresso"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RouteFallback() {
@@ -26,6 +28,7 @@ function Routes() {
         <Route path="/" component={Home} />
         <Route path="/sobre" component={Sobre} />
         <Route path="/modulo/:id" component={Modulo} />
+        <Route path="/progresso" component={Progresso} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -40,6 +43,7 @@ function App() {
       {/* BASE_URL acompanha o --base do Vite: "" nos CDNs e
           "/aprende-brasil" no GitHub Pages, que serve em subpath.
           O trailing slash é removido: o wouter espera base sem ele. */}
+      <AppStatus />
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <Routes />
       </WouterRouter>
