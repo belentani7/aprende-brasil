@@ -1,4 +1,4 @@
-"""O servidor de SPA não pode servir arquivos fora de dist/public."""
+"""O servidor de SPA entrega só o que está em dist/public e faz fallback do SPA."""
 
 from __future__ import annotations
 
@@ -6,46 +6,56 @@ import sys
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
+from starlette.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from api.main import safe_static_path  # noqa: E402
+from api.main import SPAStaticFiles  # noqa: E402
 
 
 @pytest.fixture()
-def public(tmp_path: Path) -> Path:
-    root = tmp_path / "dist" / "public"
-    (root / "assets").mkdir(parents=True)
-    (root / "index.html").write_text("<!doctype html>", encoding="utf-8")
-    (root / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
-    (root / "404.html").write_text("nao encontrado", encoding="utf-8")
+def client(tmp_path: Path) -> TestClient:
+    public = tmp_path / "dist" / "public"
+    (public / "assets").mkdir(parents=True)
+    (public / "index.html").write_text("<!doctype html><title>SPA</title>", encoding="utf-8")
+    (public / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
+    (public / "favicon.svg").write_text("<svg/>", encoding="utf-8")
     (tmp_path / "segredo.txt").write_text("não deveria sair", encoding="utf-8")
-    return root
+
+    app = FastAPI()
+    app.mount("/", SPAStaticFiles(directory=public, html=True), name="spa")
+    return TestClient(app)
 
 
-def test_serve_arquivo_dentro_da_pasta(public):
-    assert safe_static_path(public, "index.html") == public / "index.html"
-    assert safe_static_path(public, "assets/app.js") == public / "assets" / "app.js"
-    assert safe_static_path(public, "/assets/app.js") == public / "assets" / "app.js"
+def test_serve_arquivos_publicos(client):
+    assert client.get("/").text == "<!doctype html><title>SPA</title>"
+    assert client.get("/assets/app.js").text == "console.log(1)"
+    assert client.get("/favicon.svg").text == "<svg/>"
 
 
-def test_bloqueia_traversal_com_pontos(public):
-    assert safe_static_path(public, "../segredo.txt") is None
-    assert safe_static_path(public, "../../etc/passwd") is None
-    assert safe_static_path(public, "assets/../../segredo.txt") is None
+def test_rota_do_spa_recebe_index(client):
+    for route in ("/modulo/alfa-letra-a", "/sobre", "/nao-existe"):
+        response = client.get(route)
+        assert response.status_code == 200
+        assert "<title>SPA</title>" in response.text
 
 
-def test_bloqueia_caminho_absoluto(public, tmp_path):
-    assert safe_static_path(public, str(tmp_path / "segredo.txt")) is None
+def test_arquivo_com_extensao_ausente_continua_404(client):
+    response = client.get("/assets/nao-existe.js")
+    assert response.status_code == 404
+    assert "não deveria sair" not in response.text
 
 
-def test_bloqueia_symlink_que_aponta_para_fora(public, tmp_path):
-    link = public / "atalho.txt"
-    link.symlink_to(tmp_path / "segredo.txt")
-    assert safe_static_path(public, "atalho.txt") is None
+def test_bloqueia_traversal(client):
+    for attempt in ("/../segredo.txt", "/%2e%2e/segredo.txt", "/assets/../../segredo.txt"):
+        response = client.get(attempt)
+        assert "não deveria sair" not in response.text
 
 
-def test_arquivo_inexistente_e_nulo(public):
-    assert safe_static_path(public, "nao-existe.js") is None
-    assert safe_static_path(public, "") is None
+def test_symlink_para_fora_nao_e_servido(client, tmp_path):
+    public = tmp_path / "dist" / "public"
+    (public / "atalho.txt").symlink_to(tmp_path / "segredo.txt")
+    response = client.get("/atalho.txt")
+    assert "não deveria sair" not in response.text

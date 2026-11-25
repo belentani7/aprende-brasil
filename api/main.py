@@ -2,8 +2,10 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import Response
+from starlette.types import Scope
 
 from .database import engine, Base
 from .routes import tracks, modules, tutor, progress
@@ -34,33 +36,31 @@ def health():
 CLIENT_DIST = Path(__file__).resolve().parent.parent / "dist" / "public"
 
 
-def safe_static_path(root: Path, requested: str) -> Path | None:
-    """Resolve um arquivo pedido pelo cliente sem sair da pasta pública.
+class SPAStaticFiles(StaticFiles):
+    """Arquivos estáticos com fallback para o index.html das rotas do SPA.
 
-    O caminho da URL é dado por quem chama o servidor; concatenar direto abriria
-    leitura arbitrária (``/../api/main.py``, ``/../../etc/passwd``). Aqui o
-    caminho é resolvido e só é aceito se continuar dentro de ``root``.
+    ``StaticFiles`` resolve o caminho com segurança (não sai do diretório e
+    bloqueia symlinks), mas devolve 404 em ``/modulo/alfa-letra-a``. Aqui uma
+    rota sem extensão que não existe vira ``index.html`` e o React Router
+    decide a tela; um arquivo com extensão ausente continua 404 (um ``.js``
+    faltando não pode virar HTML).
     """
-    try:
-        candidate = (root / requested.lstrip("/")).resolve()
-    except (OSError, ValueError):
-        return None
-    if not candidate.is_relative_to(root.resolve()):
-        return None
-    return candidate if candidate.is_file() else None
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        try:
+            response = await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code != 404 or "." in Path(path).name:
+                raise
+            return await super().get_response("index.html", scope)
+        if response.status_code == 404 and "." not in Path(path).name:
+            return await super().get_response("index.html", scope)
+        return response
 
 
 if CLIENT_DIST.is_dir():
-    assets = CLIENT_DIST / "assets"
-    if assets.is_dir():
-        app.mount("/assets", StaticFiles(directory=assets), name="assets")
-
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str):
-        static_file = safe_static_path(CLIENT_DIST, full_path)
-        if static_file is not None:
-            return FileResponse(static_file)
-        index = CLIENT_DIST / "index.html"
-        if not index.is_file():
-            raise HTTPException(status_code=404, detail="Frontend não compilado")
-        return FileResponse(index)
+    app.mount(
+        "/",
+        SPAStaticFiles(directory=CLIENT_DIST, html=True),
+        name="spa",
+    )
