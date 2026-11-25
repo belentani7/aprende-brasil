@@ -1,12 +1,45 @@
-# Generated OS metadata, Python bytecode, and HTML reports
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build e artefatos gerados
+dist/
+*.tsbuildinfo
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Testes e navegadores
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# Ambiente (nunca versionar segredos)
+.env
+.env.*
+!.env.example
+
+# Editores e sistema
+.idea/
+.vscode/
 .DS_Store
 ._*
 __MACOSX/
 Thumbs.db
-Desktop.ini
 desktop.ini
-__pycache__/
-*.pyc
-*.pyo
-htmlcov/
-playwright-report/
+*.swp
+
+# Deployment local
+.vercel/
+.netlify/
+
+# Logs e cache
+*.log
+.cache/

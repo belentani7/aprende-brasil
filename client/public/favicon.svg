@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="aprende. Brasil">
+  <rect width="64" height="64" rx="16" fill="#20231f"/>
+  <path d="M32 12l5.2 12.8L50 30l-12.8 5.2L32 48l-5.2-12.8L14 30l12.8-5.2z" fill="#ef7f42"/>
+  <circle cx="46" cy="46" r="4" fill="#89ad75"/>
+</svg>
