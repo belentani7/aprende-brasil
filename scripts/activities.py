@@ -304,12 +304,18 @@ def numeric_checked(
     tolerance: float = 0.01,
     unit: str = "",
     namespace: dict | None = None,
+    expected: float | None = None,
 ) -> dict:
     """Avalia a expressão em Python e usa o resultado como gabarito.
 
     ``expression`` é avaliada com ``eval`` restrito (sem builtins e com uma
     lista branca de nomes matemáticos), o que mantém a verificação simples e
     determinística. Qualquer erro de sintaxe ou nome desconhecido quebra o build.
+
+    ``expected`` é a conferência cruzada: quem escreve a atividade declara o
+    resultado que espera e o build falha se a expressão não chegar lá. Sem isso,
+    uma expressão sintaticamente válida mas errada (``40 + 30`` em vez de
+    ``40 + 35``) passaria silenciosamente.
     """
     safe = {"__builtins__": {}, "round": round, "abs": abs, "min": min, "max": max}
     if namespace:
@@ -327,6 +333,16 @@ def numeric_checked(
     rounded = round(float(value), 4)
     if rounded == int(rounded):
         rounded = int(rounded)
+    if expected is not None:
+        _require(
+            isinstance(expected, (int, float)) and not isinstance(expected, bool),
+            f"{activity_id}: expected precisa ser número",
+        )
+        _require(
+            abs(float(rounded) - float(expected)) <= max(tolerance, 1e-9),
+            f"{activity_id}: a expressão {expression!r} dá {rounded}, "
+            f"que não bate com o gabarito esperado {expected}",
+        )
     return {
         "kind": "numeric",
         "id": activity_id,

@@ -16,11 +16,25 @@ import { defineConfig, type Plugin } from "vite";
 const base = process.env.VITE_BASE_PATH || "/";
 
 /**
- * O preview do Arena/E2B chega por um host próprio e dinâmico. Em
- * desenvolvimento/preview liberamos hosts, mas **somente** quando a variável
- * estiver definida; em produção o app é estático e não roda servidor Vite.
+ * O preview chega por um host próprio e dinâmico (o proxy do ambiente de
+ * desenvolvimento). Para que ele funcione sem repetir config a cada sessão,
+ * durante `vite preview` liberamos apenas o sufixo do proxy de preview, e
+ * também qualquer host declarado em `VITE_PREVIEW_ALLOWED_HOSTS`.
+ *
+ * O que muda em relação a `allowedHosts: true`:
+ * - o build publicado não depende disso (é estático);
+ * - lista explícita, versionada e restrita a preview, nunca curinga;
+ * - o servidor de desenvolvimento (este sim acessível na rede local) continua
+ *   com a verificação padrão do Vite.
  */
-const previewHosts = process.env.VITE_PREVIEW_ALLOWED_HOSTS;
+function previewAllowedHosts(): string[] {
+  const explicit = (process.env.VITE_PREVIEW_ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map(host => host.trim())
+    .filter(Boolean);
+  // O Vite usa a convenção ".dominio" para "qualquer subdomínio".
+  return [...new Set(["localhost", "127.0.0.1", ".e2b.app", ...explicit])];
+}
 
 /**
  * O `vite preview` aplica fallback de SPA em tudo: pedir `/assets/x.js`
@@ -80,10 +94,7 @@ export default defineConfig({
   preview: {
     host: "0.0.0.0",
     port: 4173,
-    // Lista explícita e opcional: sem a variável, o Vite usa o padrão seguro.
-    ...(previewHosts
-      ? { allowedHosts: previewHosts.split(",").map(host => host.trim()) }
-      : {}),
+    allowedHosts: previewAllowedHosts(),
   },
   build: {
     outDir: "../dist/public",
