@@ -7,10 +7,18 @@ import { expect, test, type Page } from "@playwright/test";
  * é do aparelho, não do servidor.
  */
 
+/**
+ * Abre a página com armazenamento limpo.
+ *
+ * O `addInitScript` roda **antes** de qualquer script da página, então o app já
+ * nasce sem progresso antigo. Fazer `goto` → `clear` → `reload` funcionava, mas
+ * dava uma janela em que a interface renderizava com dados da execução anterior:
+ * era daí que vinha a instabilidade dos testes de progresso.
+ */
 async function openClean(page: Page, path = "/") {
+  await page.context().addInitScript(() => window.localStorage.clear());
   await page.goto(path);
-  await page.evaluate(() => window.localStorage.clear());
-  await page.reload();
+  await expect(page.locator("main, [role=main]").first()).toBeVisible();
 }
 
 test.describe("catálogo e navegação", () => {
@@ -131,7 +139,9 @@ test.describe("progresso e portabilidade", () => {
     page,
   }) => {
     await openClean(page, "/modulo/mat-soma");
-    await page.getByRole("button", { name: /Concluir módulo/i }).click();
+    const concluir = page.getByRole("button", { name: /Concluir módulo/i });
+    await expect(concluir).toBeEnabled();
+    await concluir.click();
     await expect(page.getByRole("progressbar")).toHaveAttribute(
       "aria-valuenow",
       "100"
@@ -159,7 +169,9 @@ test.describe("progresso e portabilidade", () => {
 
   test("exporta e reimporta o progresso", async ({ page }) => {
     await openClean(page, "/modulo/mat-soma");
-    await page.getByRole("button", { name: /Concluir módulo/i }).click();
+    const concluir = page.getByRole("button", { name: /Concluir módulo/i });
+    await expect(concluir).toBeEnabled();
+    await concluir.click();
     await page.goto("/progresso");
 
     const downloadPromise = page.waitForEvent("download");
@@ -320,19 +332,17 @@ test.describe("PWA", () => {
   }) => {
     await openClean(page);
     await page.waitForLoadState("networkidle");
-    // Espera o service worker assumir o controle.
-    await page.evaluate(async () => {
-      if (!("serviceWorker" in navigator)) return;
-      await navigator.serviceWorker.ready;
-      if (!navigator.serviceWorker.controller) {
-        await new Promise<void>(resolve => {
-          navigator.serviceWorker.addEventListener("controllerchange", () =>
-            resolve()
-          );
-          setTimeout(resolve, 4000);
-        });
-      }
-    });
+    // Espera o service worker realmente assumir o controle. Sem isso o reload
+    // offline pode acontecer antes do cache do shell existir — flaky por
+    // construção. `waitForFunction` falha com mensagem clara se não acontecer.
+    const temSW = await page.evaluate(() => "serviceWorker" in navigator);
+    if (temSW) {
+      await page.waitForFunction(
+        () => navigator.serviceWorker.controller !== null,
+        undefined,
+        { timeout: 20_000 }
+      );
+    }
     await context.setOffline(true);
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible({

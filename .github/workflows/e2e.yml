@@ -43,15 +43,13 @@ jobs:
       - name: Build estático
         run: npm run build
 
-      - name: Verificações de acessibilidade e performance (Lighthouse CI)
-        run: npx --yes @lhci/cli@0.14.x autorun
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-        continue-on-error: true
+      - name: Lighthouse CI (performance e acessibilidade reais)
+        # Roda contra dist/public com a configuração de `lighthouserc.cjs`.
+        # Performance < 95 ou acessibilidade < 95 reprovam o PR de propósito.
+        run: npx --yes @lhci/cli@0.14.x autorun 2>&1 | tee /tmp/lighthouse.txt
 
       - name: Testes Playwright
-        # `tee` guarda a saída para o passo seguinte conseguir explicar a falha
-        # sem precisar de acesso aos logs do runner.
+        # `--reporter=list` mantém a saída legível no log; o HTML fica no artifact.
         run: npx playwright test 2>&1 | tee /tmp/playwright.txt
 
       - name: Explicar falhas no PR
@@ -60,11 +58,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           {
-            echo '### Playwright falhou'
+            echo '### Esta execução falhou'
             echo
-            echo '```'
-            grep -vE '^\s*$' /tmp/playwright.txt | tail -n 120 || true
-            echo '```'
+            for arquivo in /tmp/lighthouse.txt /tmp/playwright.txt; do
+              [ -s "$arquivo" ] || continue
+              echo "<details><summary>$(basename "$arquivo")</summary>"
+              echo
+              echo '```'
+              grep -vE '^\s*$' "$arquivo" | tail -n 120 || true
+              echo '```'
+              echo '</details>'
+            done
           } > /tmp/comentario.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comentario.md
 
