@@ -19,6 +19,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   playwright:
@@ -49,7 +50,23 @@ jobs:
         continue-on-error: true
 
       - name: Testes Playwright
-        run: npx playwright test
+        # `tee` guarda a saída para o passo seguinte conseguir explicar a falha
+        # sem precisar de acesso aos logs do runner.
+        run: npx playwright test 2>&1 | tee /tmp/playwright.txt
+
+      - name: Explicar falhas no PR
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo '### Playwright falhou'
+            echo
+            echo '```'
+            grep -vE '^\s*$' /tmp/playwright.txt | tail -n 120 || true
+            echo '```'
+          } > /tmp/comentario.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/comentario.md
 
       - name: Guardar relatório
         if: always()
