@@ -1,0 +1,75 @@
+{
+  "tema": "ciencia-br",
+  "portal": "aprende-brasil",
+  "registros": [
+    {
+      "fuente": "GBIF",
+      "spec": "gbif:fauna",
+      "ok": true,
+      "datos": [
+        {
+          "nombre": "Cnecomymar Ogloblin Fauna 1963",
+          "rango": "GENUS",
+          "clave": 164124067,
+          "url": "https://www.gbif.org/species/164124067"
+        },
+        {
+          "nombre": "Arescon Walker Fauna 1846",
+          "rango": "GENUS",
+          "clave": 164124091,
+          "url": "https://www.gbif.org/species/164124091"
+        },
+        {
+          "nombre": "Eofoersteria Mathot Fauna 1966",
+          "rango": "GENUS",
+          "clave": 164124266,
+          "url": "https://www.gbif.org/species/164124266"
+        },
+        {
+          "nombre": "Krokella Huber Fauna 1993",
+          "rango": "GENUS",
+          "clave": 164124194,
+          "url": "https://www.gbif.org/species/164124194"
+        },
+        {
+          "nombre": "Chrysoctonus Mathot Fauna 1966",
+          "rango": "GENUS",
+          "clave": 164124107,
+          "url": "https://www.gbif.org/species/164124107"
+        }
+      ]
+    },
+    {
+      "fuente": "OpenAlex",
+      "spec": "openalex:Brazil education",
+      "ok": true,
+      "datos": [
+        {
+          "titulo": "Work ability and associated factors of Brazilian technical-administrative workers in education",
+          "anio": 2016,
+          "url": "https://doi.org/10.1186/s13104-015-1837-x"
+        },
+        {
+          "titulo": "How to avoid fish introductions in Brazil: education and information as alternatives",
+          "anio": 2015,
+          "url": "https://doi.org/10.1016/j.ncon.2015.06.002"
+        },
+        {
+          "titulo": "Independent Effects of Income and Education on the Risk of Obesity in the Brazilian Adult Population",
+          "anio": 2001,
+          "url": "https://doi.org/10.1093/jn/131.3.881s"
+        },
+        {
+          "titulo": "Opportunity Foregone: Education in Brazil.",
+          "anio": 1996,
+          "url": "http://ci.nii.ac.jp/ncid/BB01102142"
+        },
+        {
+          "titulo": "Blockchain and smart contracts for higher education registry in Brazil",
+          "anio": 2019,
+          "url": "https://doi.org/10.1002/nem.2061"
+        }
+      ]
+    }
+  ]
+}
